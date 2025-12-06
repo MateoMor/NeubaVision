@@ -7,7 +7,7 @@ def detect_and_merge_lines_hough(
     img, kernel_size=5, canny_threshold1=30, canny_threshold2=90,
     k=3000, hough_threshold=160, angle_tol_deg=2.0,
     rho_tol=20.0, debug=False
-):
+) -> list[tuple[int, int, int, int]]:
     """
     Detects straight lines in an image using the Hough Line Transform and merges
     multiple nearly-parallel and overlapping detections into single representative
