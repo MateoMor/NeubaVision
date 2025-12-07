@@ -7,11 +7,16 @@ def detect_and_merge_lines_hough(
     img, kernel_size=5, canny_threshold1=30, canny_threshold2=90,
     k=3000, hough_threshold=160, angle_tol_deg=2.0,
     rho_tol=20.0, debug=False
-) -> list[tuple[float, float, float, float]]:
+) -> list[tuple[float, float]]:
     """
     Detects straight lines in an image using the Hough Line Transform and merges
     multiple nearly-parallel and overlapping detections into single representative
     lines.
+
+    Returns:
+        list of tuples (rho, theta) representing merged lines in Hough space.
+        rho: distance from origin to the line
+        theta: angle in radians
 
     This is the refactored function (moved to `src/` for reuse). See the project
     code for parameter descriptions.
@@ -78,17 +83,8 @@ def detect_and_merge_lines_hough(
         mean_rho = np.mean(group_rhos)
         mean_theta = np.mean(group_thetas)
 
-        # Convertir a (x1,y1,x2,y2)
-        a = np.cos(mean_theta)
-        b = np.sin(mean_theta)
-        x0 = a * mean_rho
-        y0 = b * mean_rho
-        x1 = int(x0 + k * (-b))
-        y1 = int(y0 + k * (a))
-        x2 = int(x0 - k * (-b))
-        y2 = int(y0 - k * (a))
-
-        merged_lines.append((x1, y1, x2, y2))
+        # Guardar (rho, theta)
+        merged_lines.append((mean_rho, mean_theta))
 
     # --- Debug visual ---
     if debug:
@@ -106,7 +102,16 @@ def detect_and_merge_lines_hough(
         if len(debug_img.shape) == 2:
             debug_img = cv.cvtColor(debug_img, cv.COLOR_GRAY2BGR)
 
-        for x1, y1, x2, y2 in merged_lines:
+        # Convertir (rho, theta) a (x1, y1, x2, y2) para dibujar
+        for rho, theta in merged_lines:
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            x1 = int(x0 + k * (-b))
+            y1 = int(y0 + k * (a))
+            x2 = int(x0 - k * (-b))
+            y2 = int(y0 - k * (a))
             cv.line(debug_img, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
         plt.subplot(224)
