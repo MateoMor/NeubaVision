@@ -1,17 +1,17 @@
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
 
 
 def detect_and_merge_lines_hough(
     img, kernel_size=5, canny_threshold1=30, canny_threshold2=90,
-    k=3000, hough_threshold=160, angle_tol_deg=2.0,
-    rho_tol=20.0, debug=False
+    k=3000, hough_threshold=160, debug=False
 ) -> list[tuple[float, float]]:
     """
     Detects straight lines in an image using the Hough Line Transform and merges
     multiple nearly-parallel and overlapping detections into single representative
-    lines.
+    lines using DBSCAN clustering in (rho, theta) parameter space.
 
     Returns:
         list of tuples (rho, theta) representing merged lines in Hough space.
@@ -55,35 +55,39 @@ def detect_and_merge_lines_hough(
     rhos = np.array(rhos)
     thetas = np.array(thetas)
 
-    used = np.zeros(len(lines), dtype=bool)
+    # --- Merge lines using DBSCAN clustering ---
+    # Prepare data: normalize rho and theta for distance calculation
+    # rho ranges from 0 to max_rho (diagonal of image)
+    # theta ranges from 0 to pi
+    
+    max_rho = np.sqrt(img.shape[0]**2 + img.shape[1]**2)
+    
+    # Create feature matrix: normalize rho and theta to similar scales
+    # theta is in radians [0, pi], rho in pixels [0, max_rho]
+    features = np.column_stack([
+        rhos / max_rho,  # normalize rho to [0, 1]
+        thetas / np.pi   # normalize theta to [0, 1]
+    ])
+    
+    # Apply DBSCAN clustering
+    # eps: maximum distance between points in a cluster
+    # min_samples: minimum number of points to form a core point
+    clustering = DBSCAN(eps=0.01, min_samples=1).fit(features)
+    labels = clustering.labels_
+    
+    # Group lines by cluster
+    unique_labels = np.unique(labels)
     merged_lines = []
-
-    theta_threshold = np.deg2rad(angle_tol_deg)
-
-    # --- Agrupación y fusión ---
-    for i in range(len(lines)):
-        if used[i]:
-            continue
-
-        group_rhos = [rhos[i]]
-        group_thetas = [thetas[i]]
-        used[i] = True
-
-        for j in range(i + 1, len(lines)):
-            if used[j]:
-                continue
-
-            if (abs(thetas[i] - thetas[j]) < theta_threshold and
-                abs(rhos[i] - rhos[j]) < rho_tol):
-                group_rhos.append(rhos[j])
-                group_thetas.append(thetas[j])
-                used[j] = True
-
-        # Promedio del grupo
-        mean_rho = np.mean(group_rhos)
-        mean_theta = np.mean(group_thetas)
-
-        # Guardar (rho, theta)
+    
+    for label in unique_labels:
+        cluster_indices = np.where(labels == label)[0]
+        cluster_rhos = rhos[cluster_indices]
+        cluster_thetas = thetas[cluster_indices]
+        
+        # Average the cluster to get representative line
+        mean_rho = np.mean(cluster_rhos)
+        mean_theta = np.mean(cluster_thetas)
+        
         merged_lines.append((mean_rho, mean_theta))
 
     # --- Debug visual ---
