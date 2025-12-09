@@ -5,7 +5,7 @@ import cv2 as cv
 # Add parent directory to path to import src modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tests.detect_and_merge_lines_hough import detect_and_merge_lines_hough
+from src.vision_tools.detect_and_merge_lines_hough import detect_and_merge_lines_hough
 from src.vision_tools.get_main_grid import get_main_grid
 
 
@@ -49,7 +49,7 @@ def process_test_images(debug):
 		# Detect and merge lines
 		lines_coords = detect_and_merge_lines_hough(
 			img, 
-			hough_threshold=200,
+			hough_threshold=0.15,
 			debug=debug,
 		)
 		
