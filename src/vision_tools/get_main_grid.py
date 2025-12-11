@@ -31,30 +31,48 @@ def line_intersection(line1, line2) -> tuple[float, float] | None:
         # Parallel or near-parallel lines
         return None
 
-
-def get_main_grid(img, lines_coords, angle_tol=5, debug=False):
+def closest_point(target: tuple[float, float], points: list[tuple[float, float]]) -> tuple[float, float] | None:
     """
-    Finds the 4 corner intersections of the main grid.
-    
+    Finds the point in 'points' closest to 'target'.
     Args:
-        img (numpy.ndarray): Input grayscale image
-        lines_coords (list): List of tuples (rho, theta) representing lines in Hough space
-        angle_tol (float, optional): Angular tolerance in degrees for classifying lines as 
-                                     horizontal or vertical. Default is 5 degrees.
-        debug (bool, optional): If True, prints intermediate information for debugging. Default is False.
-    
+        target: tuple (x, y)
+        points: list of tuples [(x1, y1), (x2, y2), ...]
     Returns:
-        dict: Dictionary with keys 'top_left', 'top_right', 'bottom_left', 'bottom_right',
-              each containing a tuple (x, y) of the corner coordinates.
-              Returns None if insufficient lines are detected.
+        Closest point as tuple (x, y), or None if points is empty.
+    """
+    min_dist = float('inf')
+    closest = None
+    for point in points:
+        dist = np.sqrt((point[0] - target[0])**2 + (point[1] - target[1])**2)
+        if dist < min_dist:
+            min_dist = dist
+            closest = point
+    return int(closest[0]), int(closest[1]) if closest is not None else None
+
+def get_main_grid(img_shape, rhos, thetas, angle_tol=5):
+    """
+    Given a set of lines in Hough space (rhos, thetas), identify the main grid
+    formed by horizontal and vertical lines, and compute the four corner points
+    of the grid.
+
+    Args:
+        img_shape (tuple): Shape of the image (height, width).
+        rhos (list or np.ndarray): List of rho values of the lines.
+        thetas (list or np.ndarray): List of theta values of the lines.
+        angle_tol (float, optional): Tolerance in degrees to classify lines as horizontal or vertical   (default is 5 degrees).
+
+    Returns:
+        dict: Dictionary with corner points of the grid:
+            {
+                'top_left': (x, y),
+                'top_right': (x, y),
+                'bottom_left': (x, y),
+                'bottom_right': (x, y)
+            }
+        or None if the grid could not be determined.
     """
     
-    if debug:
-        print("Lines coordinates received (rho, theta):")
-        for line in lines_coords:
-            print(line)
-        print("------")
-        print(f"Total lines: {len(lines_coords)}")
+    lines_coords = list(zip(rhos, thetas))
     
     # -------------------
     # 1) Separate lines by orientation
@@ -77,12 +95,8 @@ def get_main_grid(img, lines_coords, angle_tol=5, debug=False):
         elif abs(theta_norm) < angle_tol_rad or abs(theta_norm - np.pi) < angle_tol_rad:
             verticals.append((rho, theta))
     
-    if debug:
-        print(f"Horizontals: {len(horizontals)} | Verticals: {len(verticals)}")
-    
     if len(horizontals) < 2 or len(verticals) < 2:
-        if debug:
-            print("Not enough lines to form a grid.")
+        print("Not enough lines to form a grid.")
         return None
     
     # -------------------
@@ -96,17 +110,13 @@ def get_main_grid(img, lines_coords, angle_tol=5, debug=False):
                 intersections.append(point)
     
     if len(intersections) < 4:
-        if debug:
-            print("Not enough intersections found.")
+        print("Not enough intersections found.")
         return None
-    
-    if debug:
-        print(f"\nTotal intersections found: {len(intersections)}")
     
     # -------------------
     # 3) Find corners closest to image corners
     # -------------------
-    img_height, img_width = img.shape[:2]
+    img_height, img_width = img_shape[:2]
     
     # Define image corners
     img_top_left = (0, 0)
@@ -114,60 +124,23 @@ def get_main_grid(img, lines_coords, angle_tol=5, debug=False):
     img_bottom_left = (0, img_height)
     img_bottom_right = (img_width, img_height)
     
-    # Find intersection closest to each image corner
-    def closest_point(target, points):
-        min_dist = float('inf')
-        closest = None
-        for point in points:
-            dist = np.sqrt((point[0] - target[0])**2 + (point[1] - target[1])**2)
-            if dist < min_dist:
-                min_dist = dist
-                closest = point
-        return closest
-    
     top_left = closest_point(img_top_left, intersections)
     top_right = closest_point(img_top_right, intersections)
     bottom_left = closest_point(img_bottom_left, intersections)
     bottom_right = closest_point(img_bottom_right, intersections)
     
     if None in [top_left, top_right, bottom_left, bottom_right]:
-        if debug:
-            print("Could not calculate all corner intersections.")
+        print("Could not calculate all corner intersections.")
         return None
     
+
     corners = {
-        'top_left': top_left,
-        'top_right': top_right,
-        'bottom_left': bottom_left,
-        'bottom_right': bottom_right
+        'tl': top_left,
+        'tr': top_right,
+        'bl': bottom_left,
+        'br': bottom_right
     }
-    
-    if debug:
-        print("\n--- Grid Corners ---")
-        for name, point in corners.items():
-            print(f"  {name}: ({point[0]:.2f}, {point[1]:.2f})")
-        
-        # Draw the 4 grid lines on the image
-        import cv2 as cv
-        img_with_grid = cv.cvtColor(img, cv.COLOR_GRAY2BGR) if len(img.shape) == 2 else img.copy()
-        
-        # Draw the 4 grid lines in red
-        # Top line
-        cv.line(img_with_grid, (int(top_left[0]), int(top_left[1])), 
-                (int(top_right[0]), int(top_right[1])), (0, 0, 255), 2)
-        # Bottom line
-        cv.line(img_with_grid, (int(bottom_left[0]), int(bottom_left[1])), 
-                (int(bottom_right[0]), int(bottom_right[1])), (0, 0, 255), 2)
-        # Left line
-        cv.line(img_with_grid, (int(top_left[0]), int(top_left[1])), 
-                (int(bottom_left[0]), int(bottom_left[1])), (0, 0, 255), 2)
-        # Right line
-        cv.line(img_with_grid, (int(top_right[0]), int(top_right[1])), 
-                (int(bottom_right[0]), int(bottom_right[1])), (0, 0, 255), 2)
-        
-        # Display the image with grid lines
-        cv.imshow("Grid Corners", img_with_grid)
-        cv.waitKey(0)
-        cv.destroyAllWindows()
-    
+
+    print("Main grid corners:", corners)
+
     return corners
