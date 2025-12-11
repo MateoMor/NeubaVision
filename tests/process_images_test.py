@@ -5,7 +5,7 @@ import cv2 as cv
 # Add parent directory to path to import src modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tests.detect_and_merge_lines_hough import detect_and_merge_lines_hough
+from src.vision_tools.detect_and_merge_lines_hough import detect_and_merge_lines_hough
 from src.vision_tools.get_main_grid import get_main_grid
 
 
@@ -18,7 +18,7 @@ def process_test_images(debug):
 	"""
 	# Get the tests folder path
 	tests_folder = os.path.dirname(os.path.abspath(__file__))
-	imgs_folder = os.path.join(tests_folder, "imgs")
+	imgs_folder = os.path.join(tests_folder, "imgs/grids")
  
 	# Get all image files from tests folder
 	image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff')
@@ -49,7 +49,7 @@ def process_test_images(debug):
 		# Detect and merge lines
 		lines_coords = detect_and_merge_lines_hough(
 			img, 
-			hough_threshold=200,
+			hough_threshold=170,
 			debug=debug,
 		)
 		
@@ -59,22 +59,15 @@ def process_test_images(debug):
 			print("  Warning: Not enough lines detected (need at least 4)")
 			continue
 		
-		# Extract main grid
-		main_grid_img, main_grid_lines = get_main_grid(img, lines_coords, debug=debug)
+		# Extract main grid corners
+		corners = get_main_grid(img, lines_coords, debug=debug)
 		
-		if main_grid_img is None or len(main_grid_lines['horizontals']) == 0:
-			print("  Warning: Could not extract valid grid region")
+		if corners is None:
+			print("  Warning: Could not extract valid grid corners")
 			continue
 		
-		total_grid_lines = len(main_grid_lines['horizontals']) + len(main_grid_lines['verticals'])
-		print(f"  Main grid extracted: {len(main_grid_lines['horizontals'])} H + {len(main_grid_lines['verticals'])} V = {total_grid_lines} lines")
-		print(f"  Main grid size: {main_grid_img.shape}")
-		
-		# Display the result
-		cv.imshow(f"Main Grid - {img_filename}", main_grid_img)
+		print("  Grid corners extracted successfully")
 		print("  Press any key to continue to next image...\n")
-		cv.waitKey(0)
-		cv.destroyAllWindows()
 	
 	print("All images processed.")
 
