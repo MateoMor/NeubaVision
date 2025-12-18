@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['Cell']
+
+roboflow:
+  workspace: mateos-workspace
+  project: neubavision
+  version: 4
+  license: MIT
+  url: https://universe.roboflow.com/mateos-workspace/neubavision/dataset/4
