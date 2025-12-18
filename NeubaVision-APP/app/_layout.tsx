@@ -7,6 +7,9 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
+import { useEffect } from 'react';
+
+import { useModelStore } from '@/store/useModelStore';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -14,6 +17,15 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    const { model, loading, loadModel } = useModelStore.getState();
+    if (!model && !loading) {
+      loadModel().catch((err) => {
+        console.error("Failed to load model:", err);
+      });
+    }
+  }, []);
 
   return (
     
