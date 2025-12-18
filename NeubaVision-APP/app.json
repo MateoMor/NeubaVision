@@ -38,6 +38,14 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow NeubaVision  access your camera",
+          "microphonePermission": "Allow NeubaVision to access your microphone",
+          "recordAudioAndroid": true
+        }
       ]
     ],
     "experiments": {
