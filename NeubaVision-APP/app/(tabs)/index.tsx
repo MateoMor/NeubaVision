@@ -1,23 +1,17 @@
-import { Image } from "expo-image";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Icon } from "@/components/ui/icon";
-
-import { Link, Stack } from "expo-router";
-
-import { Aperture } from "lucide-react-native";
-
-import { HStack } from "@/components/ui/hstack";
-
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useState } from "react";
+import { Text, View } from "react-native";
+import { Aperture } from "lucide-react-native";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 
+import { usePhotosStore } from "@/store/photosStore";
+import { HStack } from "@/components/ui/hstack";
 import { Button, ButtonIcon } from "@/components/ui/button";
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
-
+  const addPhoto = usePhotosStore((state) => state.addPhoto);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -41,11 +35,14 @@ export default function CameraScreen() {
   }
 
   const takePicture = async () => {
-    if (cameraRef) {
-      const photo = await cameraRef.takePictureAsync();
-      console.log("Photo taken:", photo.uri);
+    if (!cameraRef) {
+      return;
     }
-  }
+
+    const photo = await cameraRef.takePictureAsync();
+    console.log("Photo taken:", photo);
+    addPhoto(photo);
+  };
 
   return (
     <View className="flex-1 justify-center">
