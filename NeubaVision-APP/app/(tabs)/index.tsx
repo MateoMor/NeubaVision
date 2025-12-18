@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { Aperture } from "lucide-react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 
-import { usePhotosStore } from "@/store/photosStore";
+import { usePhotosStore } from "@/store/usePhotosStore";
 import { HStack } from "@/components/ui/hstack";
 import { Button, ButtonIcon } from "@/components/ui/button";
 
