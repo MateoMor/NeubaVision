@@ -16,6 +16,8 @@ import { Button, ButtonIcon } from "@/components/ui/button";
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
+  const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
+
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -38,14 +40,21 @@ export default function CameraScreen() {
     setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
+  const takePicture = async () => {
+    if (cameraRef) {
+      const photo = await cameraRef.takePictureAsync();
+      console.log("Photo taken:", photo.uri);
+    }
+  }
+
   return (
     <View className="flex-1 justify-center">
-      <CameraView style={{ flex: 1 }} facing={facing} />
+      <CameraView style={{ flex: 1 }} facing={facing} ref={setCameraRef} />
       <HStack className="absolute bottom-16 w-full px-16 justify-center items-center gap-4">
         <Button onPress={toggleCameraFacing}>
           <Text>Flip</Text>
         </Button>
-        <Button onPress={() => {}} variant="link" size="xl" className="p-0">
+        <Button onPress={takePicture} variant="link" size="xl" className="p-0">
           <ButtonIcon as={Aperture} size="xl" className="w-20 h-20" />
         </Button>
       </HStack>
