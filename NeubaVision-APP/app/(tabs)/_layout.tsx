@@ -21,6 +21,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="camera" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="imageScreen"
+        options={{
+          title: 'Images',
+          tabBarIcon: ({ color }) => <FontAwesome size={24} name="image" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

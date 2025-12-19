@@ -35,9 +35,12 @@ export default function CameraScreen() {
   }
 
   const takePicture = async () => {
+    console.log("Taking picture...");
     if (!cameraRef) {
       return;
     }
+
+    console.log("Camera ref is set, capturing photo...");
 
     const photo = await cameraRef.takePictureAsync();
     console.log("Photo taken:", photo);
