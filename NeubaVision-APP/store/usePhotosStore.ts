@@ -5,7 +5,7 @@ type PhotosState = {
   photos: CameraCapturedPicture[];
   addPhoto: (photo: CameraCapturedPicture) => void;
   clearPhotos: () => void;
-  lastPhoto: () => CameraCapturedPicture | null;
+  getLastPhoto: () => CameraCapturedPicture | null;
 };
 
 export const usePhotosStore = create<PhotosState>((set, get) => ({
@@ -13,7 +13,7 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
   addPhoto: (photo) =>
     set((state) => ({ photos: [...state.photos, photo] })),
   clearPhotos: () => set({ photos: [] }),
-  lastPhoto: () => {
+  getLastPhoto: () => {
     const photos = get().photos;
     return photos.length ? photos[photos.length - 1] : null;
   },
