@@ -4,13 +4,10 @@ import type { TensorflowModel } from "react-native-fast-tflite";
 import * as ImageManipulator from "expo-image-manipulator";
 
 import * as FileSystem from "expo-file-system/legacy";
-import jpeg from "jpeg-js";
 import { Buffer } from "buffer";
 import { decode } from "jpeg-js";
 
 import { BoundingBox } from "@/types/BoundingBox";
-
-// Tipo para las detecciones de YOLO
 
 
 type ModelState = {
@@ -116,47 +113,58 @@ for (const nc of possibleNumClasses) {
     console.log(`Possible: ${numPredictions} predictions with ${nc} classes`);
   }
 }
-// 7. Procesar detecciones
-      // Formato: [8400 predicciones × 5 valores]
-      // Cada predicción: [x_center, y_center, width, height, class_confidence]
+      // 7. Procesar detecciones
+      // Formato TRANSPUESTO: [5, 8400] aplanado = [x0...x8399, y0...y8399, w0...w8399, h0...h8399, c0...c8399]
       const numPredictions = 8400;
-      const numValues = 5; // 4 bbox + 1 clase
+      const imgSize = 640;
       const confidenceThreshold = 0.25;
       const iouThreshold = 0.45;
 
-      const detections: BoundingBox[] = [];
-      const outputData = output[0];
+      const boxes: number[][] = [];
+      const scores: number[] = [];
+      const outputData = output[0] as Float32Array;
 
+      // Extraer boxes y scores en formato (x1, y1, x2, y2)
       for (let i = 0; i < numPredictions; i++) {
-        const offset = i * numValues;
+        // Acceso transpuesto: cada característica está en bloques de 8400
+        const x_center = Number(outputData[0 * numPredictions + i]);
+        const y_center = Number(outputData[1 * numPredictions + i]);
+        const w = Number(outputData[2 * numPredictions + i]);
+        const h = Number(outputData[3 * numPredictions + i]);
+        const confidence = Number(outputData[4 * numPredictions + i]);
 
-        // ✅ Convertir explícitamente a number
-        const x_center = Number(outputData[offset + 0]);
-        const y_center = Number(outputData[offset + 1]);
-        const w = Number(outputData[offset + 2]);
-        const h = Number(outputData[offset + 3]);
-        const confidence = Number(outputData[offset + 4]);
-
-        // Filtrar por umbral de confianza
         if (confidence > confidenceThreshold) {
-          detections.push({
-            box: {
-              x: (x_center - w / 2) * 640, // Convertir a coordenadas absolutas
-              y: (y_center - h / 2) * 640,
-              width: w * 640,
-              height: h * 640,
-            },
-            confidence: confidence,
-            classID: 0, // only one class
-            className: classNames[0] || "objeto",
-          });
+          // Convertir de YOLO format (center_x, center_y, w, h) a (x1, y1, x2, y2)
+          const x1 = (x_center - w / 2) * imgSize;
+          const y1 = (y_center - h / 2) * imgSize;
+          const x2 = (x_center + w / 2) * imgSize;
+          const y2 = (y_center + h / 2) * imgSize;
+
+          boxes.push([x1, y1, x2, y2]);
+          scores.push(confidence);
         }
       }
 
-      console.log(`Found ${detections.length} raw detections`);
+      console.log(`Found ${boxes.length} raw detections`);
 
-      // 8. Aplicar NMS
-      const filteredDetections = applyNMS(detections, iouThreshold);
+      // 8. Aplicar NMS optimizado
+      const pickedIndices = applyOptimizedNMS(boxes, scores, iouThreshold);
+
+      // Convertir a formato BoundingBox
+      const filteredDetections: BoundingBox[] = pickedIndices.map((idx: number) => {
+        const [x1, y1, x2, y2] = boxes[idx];
+        return {
+          box: {
+            x: x1,
+            y: y1,
+            width: x2 - x1,
+            height: y2 - y1,
+          },
+          confidence: scores[idx],
+          classID: 0,
+          className: classNames[0] || "objeto",
+        };
+      });
 
       console.log(`After NMS: ${filteredDetections.length} detections`);
 
@@ -170,41 +178,57 @@ for (const nc of possibleNumClasses) {
   },
 }));
 
-// Función auxiliar para calcular IoU (Intersection over Union)
-function calculateIoU(box1: BoundingBox["box"], box2: BoundingBox["box"]): number {
-  const x1 = Math.max(box1.x, box2.x);
-  const y1 = Math.max(box1.y, box2.y);
-  const x2 = Math.min(box1.x + box1.width, box2.x + box2.width);
-  const y2 = Math.min(box1.y + box1.height, box2.y + box2.height);
+// Función optimizada para aplicar Non-Maximum Suppression
+// Trabaja con formato (x1, y1, x2, y2) para mejor precisión
+function applyOptimizedNMS(
+  boxes: number[][], 
+  scores: number[], 
+  iouThreshold: number
+): number[] {
+  if (boxes.length === 0) return [];
 
-  const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
-  const area1 = box1.width * box1.height;
-  const area2 = box2.width * box2.height;
-  const union = area1 + area2 - intersection;
+  // Pre-calcular áreas de todas las boxes
+  const areas = boxes.map(b => (b[2] - b[0]) * (b[3] - b[1]));
+  
+  // Crear array de índices ordenados por score (descendente)
+  const order = scores
+    .map((s, i) => ({ score: s, index: i }))
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.index);
 
-  return union > 0 ? intersection / union : 0;
-}
+  const pick: number[] = [];
 
-// Función para aplicar Non-Maximum Suppression
-function applyNMS(detections: BoundingBox[], iouThreshold: number): BoundingBox[] {
-  // Ordenar por confianza (mayor a menor)
-  const sorted = [...detections].sort((a, b) => b.confidence - a.confidence);
-  const keep: BoundingBox[] = [];
-
-  while (sorted.length > 0) {
-    const current = sorted.shift()!;
-    keep.push(current);
-
-    // Eliminar detecciones con IoU alto
-    for (let i = sorted.length - 1; i >= 0; i--) {
-      if (sorted[i].classID === current.classID) {
-        const iou = calculateIoU(current.box, sorted[i].box);
-        if (iou > iouThreshold) {
-          sorted.splice(i, 1);
-        }
+  while (order.length > 0) {
+    const i = order[0];
+    pick.push(i);
+    
+    const suppress: number[] = [];
+    
+    for (let j = 1; j < order.length; j++) {
+      const idx = order[j];
+      
+      // Calcular intersección
+      const xx1 = Math.max(boxes[i][0], boxes[idx][0]);
+      const yy1 = Math.max(boxes[i][1], boxes[idx][1]);
+      const xx2 = Math.min(boxes[i][2], boxes[idx][2]);
+      const yy2 = Math.min(boxes[i][3], boxes[idx][3]);
+      
+      const w = Math.max(0, xx2 - xx1);
+      const h = Math.max(0, yy2 - yy1);
+      const inter = w * h;
+      
+      // Calcular IoU
+      const iou = inter / (areas[i] + areas[idx] - inter);
+      
+      if (iou > iouThreshold) {
+        suppress.push(idx);
       }
     }
+    
+    // Remover el primero y todos los suprimidos
+    order.splice(0, 1);
+    order.splice(0, order.length, ...order.filter(idx => !suppress.includes(idx)));
   }
 
-  return keep;
+  return pick;
 }
