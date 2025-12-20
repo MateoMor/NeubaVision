@@ -26,6 +26,7 @@ export default function RootLayout() {
   // Subscribe to model and loading state
   const model = useModelStore((state) => state.model);
   const loading = useModelStore((state) => state.loading);
+  const classNames = useModelStore((state) => state.classNames);
 
   useEffect(() => {
     // Static method to access the store without subscribing
@@ -36,6 +37,8 @@ export default function RootLayout() {
         console.error("Failed to load model:", err);
       });
     }
+
+    classNames[0] = "Cells";
   }, [model, loading]);
 
   const photos = usePhotosStore((state) => state.photos);
@@ -43,7 +46,10 @@ export default function RootLayout() {
   useEffect(() => {
     console.log("Photos updated, total photos:", photos.length);
     const { runInference } = useModelStore.getState();
+    const { setDetections } = usePhotosStore.getState();
+
     const { getLastPhoto } = usePhotosStore.getState();
+    
     const lastPhoto = getLastPhoto();
 
     if (!lastPhoto) {
@@ -58,6 +64,7 @@ export default function RootLayout() {
       if (model) {
         try {
           const detections = await runInference(photoUri);
+          setDetections(photoUri, detections);
           console.log("Detections:", detections);
         } catch (error) {
           console.error("Inference error:", error);

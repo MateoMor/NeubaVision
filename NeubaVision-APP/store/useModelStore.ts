@@ -6,19 +6,12 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system/legacy";
 import jpeg from "jpeg-js";
 import { Buffer } from "buffer";
+import { decode } from "jpeg-js";
+
+import { BoundingBox } from "@/types/BoundingBox";
 
 // Tipo para las detecciones de YOLO
-export type Detection = {
-  box: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  confidence: number;
-  class: number;
-  className?: string;
-};
+
 
 type ModelState = {
   model: TensorflowModel | null;
@@ -26,7 +19,7 @@ type ModelState = {
   error: string | null;
   classNames: string[];
   loadModel: () => Promise<void>;
-  runInference: (imageUri: string) => Promise<Detection[]>;
+  runInference: (imageUri: string) => Promise<BoundingBox[]>;
   setClassNames: (names: string[]) => void;
 };
 
@@ -57,108 +50,117 @@ export const useModelStore = create<ModelState>((set, get) => ({
     }
   },
 
-  runInference: async (imageUri) => {
-    const { model, classNames } = get();
+runInference: async (imageUri) => {
+  const { model, classNames } = get();
 
-    if (!model) {
-      throw new Error("Model not loaded. Call loadModel() first.");
+  if (!model) {
+    throw new Error("Model not loaded. Call loadModel() first.");
+  }
+
+  try {
+    // 1. Redimensionar imagen a 640x640
+    const resized = await ImageManipulator.manipulateAsync(
+      imageUri,
+      [{ resize: { width: 640, height: 640 } }],
+      { format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    // 2. Leer imagen como base64
+    const base64 = await FileSystem.readAsStringAsync(resized.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    // 3. Convertir base64 a buffer
+    const imageBuffer = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
+    // 4. Decodificar JPEG
+    const { data, width, height } = decode(imageBuffer, {
+      useTArray: true,
+    });
+
+    // 5. Preparar tensor para YOLOv11 [1, 3, 640, 640]
+    const inputSize = width * height;
+    const input = new Float32Array(3 * inputSize);
+
+    // Convertir RGBA a RGB normalizado [0-1] en formato CHW
+    for (let i = 0; i < inputSize; i++) {
+      const pixelIndex = i * 4; // RGBA
+      input[i] = data[pixelIndex] / 255.0; // R channel
+      input[inputSize + i] = data[pixelIndex + 1] / 255.0; // G channel
+      input[2 * inputSize + i] = data[pixelIndex + 2] / 255.0; // B channel
     }
 
-    try {
-      // Get image
-      const resized = await ImageManipulator.manipulateAsync(
-        imageUri,
-        [{ resize: { width: 640, height: 640 } }],
-        { format: ImageManipulator.SaveFormat.JPEG }
-      );
+    console.log("Input tensor shape: [1, 3, 640, 640]");
+    console.log("Input tensor size:", input.length);
 
-      /* const imgBase64 = await FileSystem.readAsStringAsync(resized.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+    // 6. Ejecutar inferencia - ✅ Pasar como array
+    const output = await model.run([input]);
 
-      const rawImageData = jpeg.decode(Buffer.from(imgBase64, "base64"), {
-        useTArray: true,
-      });
+    // ✅ Agregar estos logs para inspeccionar
+console.log("=== MODEL OUTPUT DEBUG ===");
+console.log("Number of outputs:", output.length);
+console.log("Output[0] length:", output[0].length);
+console.log("Output[0] type:", output[0].constructor.name);
 
-      // Prepare for model input
-      const width = 640;
-      const height = 640;
-      const size = width * height;
+// Si es formato transpuesto, necesitas reshape
+const outputLength = output[0].length;
+console.log("Possible shapes:");
+console.log("- If 705600:", "8400 predictions × 84 values");
+console.log("- If format is [N, 4+classes]:", outputLength);
 
-      // Tensor YOLO
-      const input = new Float32Array(1 * 3 * size);
+// Detectar el número de clases
+const possibleNumClasses = [1]; // Ajusta según tu modelo
+for (const nc of possibleNumClasses) {
+  const numPredictions = outputLength / (4 + nc);
+  if (Number.isInteger(numPredictions)) {
+    console.log(`Possible: ${numPredictions} predictions with ${nc} classes`);
+  }
+}
+// 7. Procesar detecciones
+      // Formato: [8400 predicciones × 5 valores]
+      // Cada predicción: [x_center, y_center, width, height, class_confidence]
+      const numPredictions = 8400;
+      const numValues = 5; // 4 bbox + 1 clase
+      const confidenceThreshold = 0.25;
+      const iouThreshold = 0.45;
 
-      let r = 0;
-      let g = size;
-      let b = size * 2;
+      const detections: BoundingBox[] = [];
+      const outputData = output[0];
 
-      for (let i = 0; i < size; i++) {
-        input[r++] = rawImageData.data[i * 4] / 255.0; // R
-        input[g++] = rawImageData.data[i * 4 + 1] / 255.0; // G
-        input[b++] = rawImageData.data[i * 4 + 2] / 255.0; // B
-      }
+      for (let i = 0; i < numPredictions; i++) {
+        const offset = i * numValues;
 
-      console.log("Input:", input); */
+        // ✅ Convertir explícitamente a number
+        const x_center = Number(outputData[offset + 0]);
+        const y_center = Number(outputData[offset + 1]);
+        const w = Number(outputData[offset + 2]);
+        const h = Number(outputData[offset + 3]);
+        const confidence = Number(outputData[offset + 4]);
 
-      /* // Execute inference
-      const output = await model.run([input]);
-
-      // Procesar salida de YOLOv11
-      // YOLOv11 típicamente retorna: [1, 84, 8400] o similar
-      // donde 84 = 4 (bbox) + 80 (clases) para COCO dataset
-      // Ajusta según tu modelo específico
-
-      const detections: Detection[] = [];
-      const confidenceThreshold = 0.25; // Umbral de confianza
-      const iouThreshold = 0.45; // Umbral para NMS
-
-      // Asumiendo que output es un array de arrays
-      // Formato: [x_center, y_center, width, height, conf_class1, conf_class2, ...]
-      if (output && output.length > 0) {
-        const predictions = output[0]; // Primera dimensión
-
-        for (let i = 0; i < predictions.length; i++) {
-          const prediction = predictions[i];
-
-          // Extraer bbox (primeros 4 valores)
-          const x_center = prediction[0];
-          const y_center = prediction[1];
-          const width = prediction[2];
-          const height = prediction[3];
-
-          // Encontrar la clase con mayor confianza
-          let maxConf = 0;
-          let maxClass = 0;
-
-          for (let j = 4; j < prediction.length; j++) {
-            if (prediction[j] > maxConf) {
-              maxConf = prediction[j];
-              maxClass = j - 4;
-            }
-          }
-
-          // Filtrar por umbral de confianza
-          if (maxConf > confidenceThreshold) {
-            detections.push({
-              box: {
-                x: x_center - width / 2,
-                y: y_center - height / 2,
-                width,
-                height,
-              },
-              confidence: maxConf,
-              class: maxClass,
-              className: classNames[maxClass] || `Class ${maxClass}`,
-            });
-          }
+        // Filtrar por umbral de confianza
+        if (confidence > confidenceThreshold) {
+          detections.push({
+            box: {
+              x: (x_center - w / 2) * 640, // Convertir a coordenadas absolutas
+              y: (y_center - h / 2) * 640,
+              width: w * 640,
+              height: h * 640,
+            },
+            confidence: confidence,
+            classID: 0, // only one class
+            className: classNames[0] || "objeto",
+          });
         }
       }
 
-      // Aplicar Non-Maximum Suppression (NMS)
+      console.log(`Found ${detections.length} raw detections`);
+
+      // 8. Aplicar NMS
       const filteredDetections = applyNMS(detections, iouThreshold);
 
-      return filteredDetections; */
-      return [];
+      console.log(`After NMS: ${filteredDetections.length} detections`);
+
+      return filteredDetections;
     } catch (error) {
       console.error("Inference error:", error);
       throw new Error(
@@ -169,7 +171,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
 }));
 
 // Función auxiliar para calcular IoU (Intersection over Union)
-function calculateIoU(box1: Detection["box"], box2: Detection["box"]): number {
+function calculateIoU(box1: BoundingBox["box"], box2: BoundingBox["box"]): number {
   const x1 = Math.max(box1.x, box2.x);
   const y1 = Math.max(box1.y, box2.y);
   const x2 = Math.min(box1.x + box1.width, box2.x + box2.width);
@@ -184,10 +186,10 @@ function calculateIoU(box1: Detection["box"], box2: Detection["box"]): number {
 }
 
 // Función para aplicar Non-Maximum Suppression
-function applyNMS(detections: Detection[], iouThreshold: number): Detection[] {
+function applyNMS(detections: BoundingBox[], iouThreshold: number): BoundingBox[] {
   // Ordenar por confianza (mayor a menor)
   const sorted = [...detections].sort((a, b) => b.confidence - a.confidence);
-  const keep: Detection[] = [];
+  const keep: BoundingBox[] = [];
 
   while (sorted.length > 0) {
     const current = sorted.shift()!;
@@ -195,7 +197,7 @@ function applyNMS(detections: Detection[], iouThreshold: number): Detection[] {
 
     // Eliminar detecciones con IoU alto
     for (let i = sorted.length - 1; i >= 0; i--) {
-      if (sorted[i].class === current.class) {
+      if (sorted[i].classID === current.classID) {
         const iou = calculateIoU(current.box, sorted[i].box);
         if (iou > iouThreshold) {
           sorted.splice(i, 1);

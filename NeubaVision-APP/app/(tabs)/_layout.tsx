@@ -28,6 +28,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="image" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="segmendImage"
+        options={{
+          title: 'Segmented Image',
+          tabBarIcon: ({ color }) => <FontAwesome size={24} name="scissors" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
