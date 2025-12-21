@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
-import { Aperture } from "lucide-react-native";
+import { Alert, Text, View } from "react-native";
+import { Aperture, Images } from "lucide-react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { HStack } from "@/components/ui/hstack";
@@ -47,6 +48,33 @@ export default function CameraScreen() {
     addPhoto(photo);
   };
 
+  const pickImage = async () => {
+
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Permission required",
+        "Permission to access the media library is required."
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      const selectedAsset = result.assets[0];
+      addPhoto({ uri: selectedAsset.uri } as any);
+    }
+  };
+
   return (
     <View className="flex-1 justify-center">
       <CameraView style={{ flex: 1 }} facing={facing} ref={setCameraRef} />
@@ -56,6 +84,9 @@ export default function CameraScreen() {
         </Button>
         <Button onPress={takePicture} variant="link" size="xl" className="p-0">
           <ButtonIcon as={Aperture} size="xl" className="w-20 h-20" />
+        </Button>
+        <Button onPress={pickImage}>
+          <ButtonIcon as={Images} size="lg" className="w-8 h-8" />
         </Button>
       </HStack>
     </View>
