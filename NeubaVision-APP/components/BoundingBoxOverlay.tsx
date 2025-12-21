@@ -6,9 +6,17 @@ type Props = {
   detections: BoundingBox[];
   imageWidth: number;
   imageHeight: number;
+  originalWidth?: number;  // Original image width from model (default 640)
+  originalHeight?: number; // Original image height from model (default 640)
 };
 
-export function BoundingBoxOverlay({ detections, imageWidth, imageHeight }: Props) {
+export function BoundingBoxOverlay({ 
+  detections, 
+  imageWidth, 
+  imageHeight,
+  originalWidth = 640,
+  originalHeight = 640
+}: Props) {
 
   // Colors for the boxes
   const colors = [
@@ -20,12 +28,19 @@ export function BoundingBoxOverlay({ detections, imageWidth, imageHeight }: Prop
     '#00FFFF', // Cyan
   ];
 
+  // Calculate scale factors
+  const scaleX = imageWidth / originalWidth;
+  const scaleY = imageHeight / originalHeight;
+
   return (
     <Canvas style={{ width: imageWidth, height: imageHeight, position: 'absolute' }}>
       {detections.map((detection, index) => {
-        const { x, y, width, height } = detection.box;
+        // Scale coordinates from model space (640x640) to display space
+        const x = detection.box.x * scaleX;
+        const y = detection.box.y * scaleY;
+        const width = detection.box.width * scaleX;
+        const height = detection.box.height * scaleY;
         const color = colors[detection.classID % colors.length];
-        const label = `${detection.className} ${(detection.confidence * 100).toFixed(0)}%`;
 
         return (
           <React.Fragment key={index}>
@@ -37,19 +52,9 @@ export function BoundingBoxOverlay({ detections, imageWidth, imageHeight }: Prop
               height={height}
               color={color}
               style="stroke"
-              strokeWidth={3}
+              strokeWidth={1}
             />
             
-            {/* Label background */}
-            <RoundedRect
-              x={x}
-              y={Math.max(0, y - 28)}
-              width={Math.min(label.length * 8 + 10, imageWidth - x)}
-              height={26}
-              r={4}
-              color={color}
-              opacity={0.9}
-            />
           </React.Fragment>
         );
       })}

@@ -30,22 +30,9 @@ export default function segmendImage() {
                 detections={boxes}
                 imageWidth={imageSize}
                 imageHeight={imageSize}
+                originalWidth={640}
+                originalHeight={640}
               />
-            </View>
-
-            {/* Lista de detecciones */}
-            <View className="mt-4">
-              {boxes.map((box, index) => (
-                <View key={index} className="mb-2 p-3 bg-gray-100 rounded-lg">
-                  <Text className="font-bold text-green-600">
-                    {box.className || 'Object'} - {(box.confidence * 100).toFixed(1)}%
-                  </Text>
-                  <Text className="text-xs text-gray-500 mt-1">
-                    Position: ({box.box.x.toFixed(0)}, {box.box.y.toFixed(0)}) | 
-                    Size: {box.box.width.toFixed(0)}×{box.box.height.toFixed(0)}
-                  </Text>
-                </View>
-              ))}
             </View>
           </View>
         ))}

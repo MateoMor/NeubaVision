@@ -45,22 +45,25 @@ export function decodeJPEG(base64: string): {
 }
 
 /**
- * Converts RGBA data to RGB tensor in CHW format (Channels-Height-Width)
+ * Converts RGBA data to RGB tensor in HWC format (Height-Width-Channels)
+ * This matches TFLite's expected input format: (1, 640, 640, 3) = NHWC
  * Normalizes values to [0, 1]
  */
-export function rgbaToTensorCHW(
+export function rgbaToTensorHWC(
   data: Uint8Array,
   width: number,
   height: number
 ): Float32Array {
   const inputSize = width * height;
-  const tensor = new Float32Array(3 * inputSize);
+  const tensor = new Float32Array(inputSize * 3); // 640*640*3
 
   for (let i = 0; i < inputSize; i++) {
-    const pixelIndex = i * 4; // RGBA
-    tensor[i] = data[pixelIndex] / 255.0; // R channel
-    tensor[inputSize + i] = data[pixelIndex + 1] / 255.0; // G channel
-    tensor[2 * inputSize + i] = data[pixelIndex + 2] / 255.0; // B channel
+    const pixelIndex = i * 4; // RGBA source
+    const tensorIndex = i * 3; // RGB destination (HWC format)
+    
+    tensor[tensorIndex] = data[pixelIndex] / 255.0;     // R
+    tensor[tensorIndex + 1] = data[pixelIndex + 1] / 255.0; // G
+    tensor[tensorIndex + 2] = data[pixelIndex + 2] / 255.0; // B
   }
 
   return tensor;
@@ -84,10 +87,10 @@ export async function preprocessImageForYOLO(
   // 3. Decode JPEG
   const { data, width, height } = decodeJPEG(base64);
 
-  // 4. Convert to CHW tensor
-  const tensor = rgbaToTensorCHW(data, width, height);
+  // 4. Convert to HWC tensor (matches TFLite's NHWC format)
+  const tensor = rgbaToTensorHWC(data, width, height);
 
-  console.log(`Preprocessed to tensor: [1, 3, ${width}, ${height}]`);
+  console.log(`Preprocessed to tensor: [1, ${height}, ${width}, 3] (NHWC format)`);
   console.log(`Tensor size: ${tensor.length}`);
 
   return { tensor, width, height };
