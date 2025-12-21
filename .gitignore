@@ -44,5 +44,8 @@ yarn-error.*
 app-example
 
 # generated native folders
-/ios
-/android
+/ios/
+/android/
+
+# Auto generated gitignore
+NeubaVision-APP/.gitignore
