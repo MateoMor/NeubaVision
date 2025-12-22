@@ -17,7 +17,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="CameraScreen"
+        options={{
+          title: 'Camera',
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="camera" color={color} />,
         }}
       />
