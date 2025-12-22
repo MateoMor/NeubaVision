@@ -6,23 +6,29 @@ import { BoundingBoxOverlay } from "@/components/BoundingBoxOverlay";
 
 export default function segmendImage() {
   const detections = usePhotosStore((state) => state.detections);
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get("window").width;
   const imageSize = screenWidth - 40; // Padding de 20 a cada lado
 
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="p-5">
         <Text className="text-2xl font-bold mb-4">Detections</Text>
-        {Object.entries(detections).map(([photoUri, boxes]) => (
-          <View key={photoUri} className="mb-8">
+        {Object.entries(detections).map(([photoPath, boxes]) => (
+          <View key={photoPath} className="mb-8">
             <Text className="font-semibold mb-2 text-gray-600">
-              Found {boxes.length} object{boxes.length !== 1 ? 's' : ''}
+              Found {boxes.length} object{boxes.length !== 1 ? "s" : ""}
             </Text>
-            
+
             {/* Contenedor de imagen con bounding boxes */}
-            <View style={{ width: imageSize, height: imageSize, position: 'relative' }}>
-              <Image 
-                source={{ uri: photoUri }} 
+            <View
+              style={{
+                width: imageSize,
+                height: imageSize,
+                position: "relative",
+              }}
+            >
+              <Image
+                source={{ uri: photoPath }}
                 style={{ width: imageSize, height: imageSize }}
                 resizeMode="cover"
               />
@@ -36,11 +42,11 @@ export default function segmendImage() {
             </View>
           </View>
         ))}
-        
+
         {Object.keys(detections).length === 0 && (
           <View className="items-center justify-center py-20">
             <Text className="text-gray-400 text-center">
-              No detections yet.{'\n'}Take a photo to start detecting objects.
+              No detections yet.{"\n"}Take a photo to start detecting objects.
             </Text>
           </View>
         )}

@@ -12,11 +12,11 @@ export interface PreprocessedImage {
  * Resizes an image to the specified dimensions
  */
 export async function resizeImage(
-  imageUri: string,
+  imagePath: string,
   targetSize: number
 ): Promise<string> {
   const resized = await ImageManipulator.manipulateAsync(
-    imageUri,
+    imagePath,
     [{ resize: { width: targetSize, height: targetSize } }],
     { format: ImageManipulator.SaveFormat.JPEG }
   );
@@ -73,13 +73,13 @@ export function rgbaToTensorHWC(
  * Preprocesses a complete image for YOLO inference
  */
 export async function preprocessImageForYOLO(
-  imageUri: string,
+  imagePath: string,
   targetSize: number = 640
 ): Promise<PreprocessedImage> {
-  console.log("Preprocessing image:", imageUri);
+  console.log("Preprocessing image:", imagePath);
 
   // 1. Resize
-  const resizedUri = await resizeImage(imageUri, targetSize);
+  const resizedUri = await resizeImage(imagePath, targetSize);
 
   // 2. Read as base64
   const base64 = await readImageAsBase64(resizedUri);

@@ -49,23 +49,22 @@ export default function RootLayout() {
     const { setDetections } = usePhotosStore.getState();
 
     const { getLastPhoto } = usePhotosStore.getState();
-    
+
     const lastPhoto = getLastPhoto();
 
     if (!lastPhoto) {
       return;
     }
 
-    const photoUri = lastPhoto.uri;
+    const photoPath = lastPhoto.path;
 
-
-    console.log("Running inference on photo URI:", photoUri);
+    console.log("Running inference on photo URI:", photoPath);
     async function testInference() {
       if (model) {
         try {
-          const detections = await runInference(photoUri);
-          setDetections(photoUri, detections);
-          console.log("Detections:", detections);
+          const detections = await runInference(photoPath);
+          setDetections(photoPath, detections);
+          // console.log("Detections:", detections);
         } catch (error) {
           console.error("Inference error:", error);
         }

@@ -11,7 +11,7 @@ type ModelState = {
   error: string | null;
   classNames: string[];
   loadModel: () => Promise<void>;
-  runInference: (imageUri: string) => Promise<BoundingBox[]>;
+  runInference: (imagePath: string) => Promise<BoundingBox[]>;
   setClassNames: (names: string[]) => void;
 };
 
@@ -45,7 +45,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
     }
   },
 
-  runInference: async (imageUri) => {
+  runInference: async (imagePath: string) => {
     const { model, classNames } = get();
 
     if (!model) {
@@ -56,7 +56,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
       console.log("Starting inference pipeline...");
 
       // 1. Preprocessing
-      const { tensor } = await preprocessImageForYOLO(imageUri, 640);
+      const { tensor } = await preprocessImageForYOLO(imagePath, 640);
 
       // 2. Inference
       console.log("Running model inference...");

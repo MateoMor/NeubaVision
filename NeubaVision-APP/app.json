@@ -45,15 +45,13 @@
           }
         }
       ],
+      "react-native-fast-tflite",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow NeubaVision  access your camera",
-          "microphonePermission": "Allow NeubaVision to access your microphone",
-          "recordAudioAndroid": true
-        }
-      ],
-      "react-native-fast-tflite"
+      "react-native-vision-camera",
+      {
+        "cameraPermissionText": "NeubaVision needs access to your Camera."
+      }
+    ]
     ],
     "experiments": {
       "typedRoutes": true,
