@@ -21,21 +21,21 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="CameraScreen"
+        name="camera"
         options={{
           title: 'Camera',
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="camera" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="imageScreen"
+        name="images"
         options={{
           title: 'Images',
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="image" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="segmendImage"
+        name="segmented-images"
         options={{
           title: 'Segmented Image',
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="scissors" color={color} />,
