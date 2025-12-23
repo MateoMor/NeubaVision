@@ -11,9 +11,13 @@ import {
   useCameraPermission,
   useCameraDevice,
   Camera,
+  useFrameProcessor,
+  useCameraFormat,
+  useSkiaFrameProcessor,
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
+import { Skia } from "@shopify/react-native-skia";
 
 export default function CameraScreen() {
   //const [facing, setFacing] = useState<CameraType>("back");
@@ -29,11 +33,6 @@ export default function CameraScreen() {
   const isActive = isFocused && appState === "active";
 
   const camera = useRef<Camera>(null);
-
-  if (!hasPermission) {
-    // Camera permissions are still loading.
-    return <View />;
-  }
 
   if (!hasPermission) {
     // Camera permissions are not granted yet.
@@ -96,6 +95,33 @@ export default function CameraScreen() {
     }
   };
 
+  /* const frameProcessor = useSkiaFrameProcessor((frame) => {
+    "worklet";
+    frame.render();
+
+    const centerX = frame.width / 2;
+    const centerY = frame.height / 2;
+    const rect = Skia.XYWHRect(centerX, centerY, 150, 150);
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color("red"));
+    frame.drawRect(rect, paint);
+  }, []); */
+
+  const frameProcessor = useSkiaFrameProcessor((frame) => {
+    "worklet";
+    /* frame.render(); */
+
+    /* const centerX = frame.width / 2;
+    const centerY = frame.height / 2;
+    const rect = Skia.XYWHRect(centerX, centerY, 150, 150);
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color("red"));
+    frame.drawRect(rect, paint); */
+  }, []);
+
+  const format = useCameraFormat(device, [{ fps: 30 }]);
+  const fps = format?.maxFps;
+
   return (
     <View className="flex-1 justify-center">
       <Camera
@@ -104,6 +130,9 @@ export default function CameraScreen() {
         device={device}
         isActive={isActive}
         photo={true}
+        frameProcessor={frameProcessor}
+        format={format}
+        fps={fps}
       />
       <HStack className="absolute bottom-16 w-full px-16 justify-center items-center gap-4">
         <Button onPress={toggleCameraFacing}>

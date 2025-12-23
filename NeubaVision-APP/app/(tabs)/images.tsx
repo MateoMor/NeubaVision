@@ -17,6 +17,8 @@ const styles = StyleSheet.create({
 export default function imageScreen() {
   const photos = usePhotosStore((state) => state.photos);
 
+  console.log("photos", photos);
+
   return (
     <View className="flex-1 p-10 bg-white">
       <ScrollView contentContainerStyle={styles.scrollView}>

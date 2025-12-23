@@ -17,6 +17,7 @@ module.exports = function (api) {
         },
       ],
       'react-native-worklets-core/plugin',
+      'react-native-worklets/plugin',
     ],
   };
 };

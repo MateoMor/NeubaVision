@@ -28,7 +28,7 @@ export default function RootLayout() {
   const loading = useModelStore((state) => state.loading);
   const classNames = useModelStore((state) => state.classNames);
 
-  useEffect(() => {
+  /* useEffect(() => {
     // Static method to access the store without subscribing
     const { loadModel } = useModelStore.getState();
 
@@ -72,7 +72,7 @@ export default function RootLayout() {
     }
 
     testInference();
-  }, [photos, model]);
+  }, [photos, model]); */
 
   return (
     <GluestackUIProvider mode="dark">
