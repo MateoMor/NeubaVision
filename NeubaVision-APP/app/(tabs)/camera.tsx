@@ -1,29 +1,26 @@
 import { useRef } from "react";
-import { Alert, Text, View } from "react-native";
-import { Aperture, Images } from "lucide-react-native";
-//import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { Alert, Text, View, useWindowDimensions } from "react-native";
+import { Aperture, Images, Trash2 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { HStack } from "@/components/ui/hstack";
 import { Button, ButtonIcon } from "@/components/ui/button";
+import { CameraDrawOverlay } from "@/components/CameraDrawOverlay";
+import { useLineDrawing } from "@/hooks/useLineDrawing";
 import {
   useCameraPermission,
   useCameraDevice,
   Camera,
   useFrameProcessor,
   useCameraFormat,
-  useSkiaFrameProcessor,
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
-import { Skia } from "@shopify/react-native-skia";
 
 export default function CameraScreen() {
-  //const [facing, setFacing] = useState<CameraType>("back");
-  //const [permission, requestPermission] = useCameraPermissions();
-  //const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const addPhoto = usePhotosStore((state) => state.addPhoto);
+  const { width, height } = useWindowDimensions();
 
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice("back");
@@ -34,8 +31,9 @@ export default function CameraScreen() {
 
   const camera = useRef<Camera>(null);
 
+  const { lines, clearLines, addDemoLines } = useLineDrawing(width, height);
+
   if (!hasPermission) {
-    // Camera permissions are not granted yet.
     return (
       <View className="flex-1 justify-center">
         <Text className="text-center mb-4">
@@ -95,28 +93,8 @@ export default function CameraScreen() {
     }
   };
 
-  /* const frameProcessor = useSkiaFrameProcessor((frame) => {
+  const frameProcessor = useFrameProcessor((frame) => {
     "worklet";
-    frame.render();
-
-    const centerX = frame.width / 2;
-    const centerY = frame.height / 2;
-    const rect = Skia.XYWHRect(centerX, centerY, 150, 150);
-    const paint = Skia.Paint();
-    paint.setColor(Skia.Color("red"));
-    frame.drawRect(rect, paint);
-  }, []); */
-
-  const frameProcessor = useSkiaFrameProcessor((frame) => {
-    "worklet";
-    /* frame.render(); */
-
-    /* const centerX = frame.width / 2;
-    const centerY = frame.height / 2;
-    const rect = Skia.XYWHRect(centerX, centerY, 150, 150);
-    const paint = Skia.Paint();
-    paint.setColor(Skia.Color("red"));
-    frame.drawRect(rect, paint); */
   }, []);
 
   const format = useCameraFormat(device, [{ fps: 30 }]);
@@ -134,15 +112,25 @@ export default function CameraScreen() {
         format={format}
         fps={fps}
       />
+
+      {/* Component to draw lines superimposed */}
+      <CameraDrawOverlay lines={lines} />
+
       <HStack className="absolute bottom-16 w-full px-16 justify-center items-center gap-4">
         <Button onPress={toggleCameraFacing}>
           <Text>Flip</Text>
+        </Button>
+        <Button onPress={addDemoLines}>
+          <Text>Draw</Text>
         </Button>
         <Button onPress={takePicture} variant="link" size="xl" className="p-0">
           <ButtonIcon as={Aperture} size="xl" className="w-20 h-20" />
         </Button>
         <Button onPress={pickImage}>
           <ButtonIcon as={Images} size="lg" className="w-8 h-8" />
+        </Button>
+        <Button onPress={clearLines}>
+          <ButtonIcon as={Trash2} size="lg" className="w-8 h-8" />
         </Button>
       </HStack>
     </View>
