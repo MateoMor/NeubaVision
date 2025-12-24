@@ -20,11 +20,11 @@ export const createLine = (
   strokeWidth,
 });
 
-interface CameraDrawOverlayProps {
+interface CameraOverlayProps {
   lines: Line[];
 }
 
-export const CameraDrawOverlay = ({ lines }: CameraDrawOverlayProps) => {
+export const CameraOverlay = ({ lines }: CameraOverlayProps) => {
   return (
     <Canvas style={StyleSheet.absoluteFill}>
       {lines.map((line, index) => {

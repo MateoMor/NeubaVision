@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Line } from "@/types/Line";
-import { createLine } from "@/components/CameraDrawOverlay";
+import { createLine } from "@/components/CameraOverlay";
 
 export const useLineDrawing = (
   width: number = 0,

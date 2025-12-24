@@ -1,12 +1,20 @@
 import { useRef } from "react";
-import { Alert, Text, View, useWindowDimensions } from "react-native";
+import {
+  Alert,
+  Text,
+  View,
+  useWindowDimensions,
+  StyleSheet,
+  Pressable,
+  Animated,
+} from "react-native";
 import { Aperture, Images, Trash2 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { HStack } from "@/components/ui/hstack";
 import { Button, ButtonIcon } from "@/components/ui/button";
-import { CameraDrawOverlay } from "@/components/CameraDrawOverlay";
+import { CameraOverlay } from "@/components/CameraOverlay";
 import { useLineDrawing } from "@/hooks/useLineDrawing";
 import {
   useCameraPermission,
@@ -31,10 +39,7 @@ export default function CameraScreen() {
 
   const camera = useRef<Camera>(null);
 
-  const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(
-    width,
-    height
-  );
+  const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(width, height);
 
   if (!hasPermission) {
     return (
@@ -59,6 +64,23 @@ export default function CameraScreen() {
     console.log("Toggling camera facing...");
   }
 
+  const flashOpacity = useRef(new Animated.Value(0)).current;
+
+  const triggerFlash = () => {
+    Animated.sequence([
+      Animated.timing(flashOpacity, {
+        toValue: 1,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+      Animated.timing(flashOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const takePicture = async () => {
     console.log("Taking picture...");
     if (!camera.current) {
@@ -67,14 +89,17 @@ export default function CameraScreen() {
 
     console.log("Camera ref is set, capturing photo...");
 
-    const photo = await camera.current.takePhoto();
-    console.log("Photo taken:", photo);
-    addPhoto(photo);
+    try {
+      const photo = await camera.current.takePhoto();
+      console.log("Photo taken:", photo);
+      addPhoto(photo);
+    } catch (e) {
+      console.error("Failed to take photo", e);
+    }
   };
 
   const pickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
       Alert.alert(
@@ -105,25 +130,40 @@ export default function CameraScreen() {
 
   return (
     <View className="flex-1 justify-center">
-      <Camera
-        ref={camera}
-        style={{ flex: 1 }}
-        device={device}
-        isActive={isActive}
-        photo={true}
-        frameProcessor={frameProcessor}
-        format={format}
-        fps={fps}
-      />
+      <Pressable style={{ flex: 1 }} onPress={takePicture}>
+        <Camera
+          ref={camera}
+          style={{ flex: 1 }}
+          device={device}
+          isActive={isActive}
+          photo={true}
+          frameProcessor={frameProcessor}
+          format={format}
+          fps={fps}
+          enableZoomGesture={true}
+          onShutter={triggerFlash}
+        />
+      </Pressable>
 
       {/* Component to draw lines superimposed */}
-      <CameraDrawOverlay lines={lines} />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <CameraOverlay lines={lines} />
+      </View>
+
+      {/* Flash Overlay */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: "white", opacity: flashOpacity },
+        ]}
+        pointerEvents="none"
+      />
 
       <HStack className="absolute bottom-16 w-full px-16 justify-center items-center gap-4">
         <Button onPress={toggleCameraFacing}>
           <Text>Flip</Text>
         </Button>
-        <Button onPress={addNeubauerChamberLines}>
+        <Button onPress={() => addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85)}>
           <Text>Draw</Text>
         </Button>
         <Button onPress={takePicture} variant="link" size="xl" className="p-0">
