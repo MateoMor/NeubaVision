@@ -49,3 +49,6 @@ app-example
 
 # Auto generated gitignore
 NeubaVision-APP/.gitignore
+
+# Ignore user custom agent rules
+.agent
