@@ -34,30 +34,62 @@ export const useLineDrawing = (
     [addLine]
   );
 
-  // Example: add demo lines
-  const addDemoLines = useCallback(() => {
-    if (width === 0 || height === 0) return;
+    const addNeubauerChamberLines = useCallback(
+    (
+      gridCols?: number | any,
+      outerThickness: number = 4,
+      innerThickness: number = 2,
+      color: string = "#00FF00",
+      sizeFactor: number = 0.85
+    ) => {
+      if (width === 0 || height === 0) return;
 
-    // Cross in the center
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const size = 50;
+      const safeGridCols = typeof gridCols === "number" ? gridCols : 4;
 
-    drawLine(centerX - size, centerY, centerX + size, centerY, "#00FF00", 4);
-    drawLine(centerX, centerY - size, centerX, centerY + size, "#00FF00", 4);
+      const size = Math.min(width, height) * sizeFactor; // Square size
+      const halfSize = size / 2;
+      const centerX = width / 2;
+      const centerY = height / 2;
 
-    // Rectangle
-    drawLine(50, 100, width - 50, 100, "#FF0000", 3);
-    drawLine(width - 50, 100, width - 50, height - 50, "#FF0000", 3);
-    drawLine(width - 50, height - 50, 50, height - 50, "#FF0000", 3);
-    drawLine(50, height - 50, 50, 100, "#FF0000", 3);
-  }, [width, height, drawLine]);
+      const topLeftX = centerX - halfSize;
+      const topLeftY = centerY - halfSize;
+      const bottomRightX = centerX + halfSize;
+      const bottomRightY = centerY + halfSize;
+
+      const step = size / safeGridCols;
+      const innerColor = `${color}AA`; // Add transparency
+      const outerColor = color;
+
+      // Draw inner vertical lines
+      for (let i = 1; i < safeGridCols; i++) {
+        const x = topLeftX + step * i;
+        drawLine(x, topLeftY, x, bottomRightY, innerColor, innerThickness);
+      }
+
+      // Draw inner horizontal lines
+      for (let i = 1; i < safeGridCols; i++) {
+        const y = topLeftY + step * i;
+        drawLine(topLeftX, y, bottomRightX, y, innerColor, innerThickness);
+      }
+
+      // Draw outer box
+      // Top
+      drawLine(topLeftX, topLeftY, bottomRightX, topLeftY, outerColor, outerThickness);
+      // Bottom
+      drawLine(topLeftX, bottomRightY, bottomRightX, bottomRightY, outerColor, outerThickness);
+      // Left
+      drawLine(topLeftX, topLeftY, topLeftX, bottomRightY, outerColor, outerThickness);
+      // Right
+      drawLine(bottomRightX, topLeftY, bottomRightX, bottomRightY, outerColor, outerThickness);
+    },
+    [width, height, drawLine]
+  );
 
   return {
     lines,
     addLine,
     clearLines,
     drawLine,
-    addDemoLines,
+    addNeubauerChamberLines,
   };
 };

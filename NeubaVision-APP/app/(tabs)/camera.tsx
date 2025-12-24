@@ -31,7 +31,10 @@ export default function CameraScreen() {
 
   const camera = useRef<Camera>(null);
 
-  const { lines, clearLines, addDemoLines } = useLineDrawing(width, height);
+  const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(
+    width,
+    height
+  );
 
   if (!hasPermission) {
     return (
@@ -120,7 +123,7 @@ export default function CameraScreen() {
         <Button onPress={toggleCameraFacing}>
           <Text>Flip</Text>
         </Button>
-        <Button onPress={addDemoLines}>
+        <Button onPress={addNeubauerChamberLines}>
           <Text>Draw</Text>
         </Button>
         <Button onPress={takePicture} variant="link" size="xl" className="p-0">
