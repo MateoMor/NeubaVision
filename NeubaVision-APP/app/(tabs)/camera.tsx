@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/slider";
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { CameraOverlay } from "@/components/CameraOverlay";
+import { CameraPermissionRequest } from "@/components/CameraPermissionRequest";
 import { useLineDrawing } from "@/hooks/useLineDrawing";
 import {
   useCameraPermission,
@@ -36,7 +37,7 @@ export default function CameraScreen() {
   const addPhoto = usePhotosStore((state) => state.addPhoto);
   const { width, height } = useWindowDimensions();
 
-  const { hasPermission, requestPermission } = useCameraPermission();
+  const { hasPermission } = useCameraPermission();
   const device = useCameraDevice("back");
 
   const isFocused = useIsFocused();
@@ -49,14 +50,7 @@ export default function CameraScreen() {
   const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(width, height);
 
   if (!hasPermission) {
-    return (
-      <View className="flex-1 justify-center">
-        <Text className="text-center mb-4">
-          We need your permission to show the camera
-        </Text>
-        <Button onPress={requestPermission}>Grant Permission</Button>
-      </View>
-    );
+    return <CameraPermissionRequest />;
   }
 
   if (!device) {
