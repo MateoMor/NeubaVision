@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Text,
@@ -13,6 +13,12 @@ import * as ImagePicker from "expo-image-picker";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { HStack } from "@/components/ui/hstack";
+import {
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
+} from "@/components/ui/slider";
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { CameraOverlay } from "@/components/CameraOverlay";
 import { useLineDrawing } from "@/hooks/useLineDrawing";
@@ -38,6 +44,7 @@ export default function CameraScreen() {
   const isActive = isFocused && appState === "active";
 
   const camera = useRef<Camera>(null);
+  const [zoom, setZoom] = useState(device?.neutralZoom ?? 1);
 
   const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(width, height);
 
@@ -142,6 +149,7 @@ export default function CameraScreen() {
           fps={fps}
           enableZoomGesture={true}
           onShutter={triggerFlash}
+          zoom={zoom}
         />
       </Pressable>
 
@@ -159,23 +167,42 @@ export default function CameraScreen() {
         pointerEvents="none"
       />
 
-      <HStack className="absolute bottom-16 w-full px-16 justify-center items-center gap-4">
-        <Button onPress={toggleCameraFacing}>
-          <Text>Flip</Text>
-        </Button>
-        <Button onPress={() => addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85)}>
-          <Text>Draw</Text>
-        </Button>
-        <Button onPress={takePicture} variant="link" size="xl" className="p-0">
-          <ButtonIcon as={Aperture} size="xl" className="w-20 h-20" />
-        </Button>
-        <Button onPress={pickImage}>
-          <ButtonIcon as={Images} size="lg" className="w-8 h-8" />
-        </Button>
-        <Button onPress={clearLines}>
-          <ButtonIcon as={Trash2} size="lg" className="w-8 h-8" />
-        </Button>
-      </HStack>
+      {/* Zoom Slider */}
+      <View className="absolute bottom-0 w-full px-8 items-center h-40 justify-evenly bg-[rgba(0,0,0,0.2)]">
+        <Slider
+          defaultValue={zoom}
+          minValue={device?.minZoom ?? 1}
+          maxValue={Math.min(device?.maxZoom ?? 1, 10)} // Cap at 10x
+          value={zoom}
+          onChange={(value) => {
+            setZoom(value);
+          }}
+          className="w-1/2"
+        >
+          <SliderTrack>
+            <SliderFilledTrack />
+          </SliderTrack>
+          <SliderThumb />
+        </Slider>
+
+        <HStack className="w-full px-16 justify-center items-center gap-4">
+          <Button onPress={toggleCameraFacing}>
+            <Text>Flip</Text>
+          </Button>
+          <Button onPress={() => addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85)}>
+            <Text>Draw</Text>
+          </Button>
+          <Button onPress={takePicture} variant="link" size="xl" className="p-0">
+            <ButtonIcon as={Aperture} size="xl" className="w-20 h-20" />
+          </Button>
+          <Button onPress={pickImage}>
+            <ButtonIcon as={Images} size="lg" className="w-8 h-8" />
+          </Button>
+          <Button onPress={clearLines}>
+            <ButtonIcon as={Trash2} size="lg" className="w-8 h-8" />
+          </Button>
+        </HStack>
+      </View>
     </View>
   );
 }
