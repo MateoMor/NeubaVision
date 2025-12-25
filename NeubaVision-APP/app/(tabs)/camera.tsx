@@ -1,153 +1,115 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Text,
-  View,
-  useWindowDimensions,
-  StyleSheet,
-  Pressable,
-  Animated,
-} from "react-native";
-import { Grid3x3, Images, Aperture } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { View, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
-import { HStack } from "@/components/ui/hstack";
-import {
-  Slider,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderTrack,
-} from "@/components/ui/slider";
-import { Button, ButtonIcon } from "@/components/ui/button";
 import { CameraOverlay } from "@/components/CameraOverlay";
 import { CameraPermissionRequest } from "@/components/CameraPermissionRequest";
+import { CameraControls } from "@/components/CameraControls";
+import { FlashOverlay } from "@/components/FlashOverlay";
+import { DeviceNotFound } from "@/components/DeviceNotFound";
 import { useLineDrawing } from "@/hooks/useLineDrawing";
+import { useCameraFlash } from "@/hooks/useCameraFlash";
+import { useTakePicture } from "@/hooks/useTakePicture";
+import { useImagePicker } from "@/hooks/useImagePicker";
 import {
   useCameraPermission,
   useCameraDevice,
   Camera,
-  useFrameProcessor,
   useCameraFormat,
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
 
+// Grid configuration constants
+const GRID_CONFIG = {
+  rows: 4,
+  cols: 4,
+  strokeWidth: 2,
+  color: "#00FF00",
+  opacity: 0.85,
+} as const;
+
 export default function CameraScreen() {
   const addPhoto = usePhotosStore((state) => state.addPhoto);
   const { width, height } = useWindowDimensions();
 
+  // Camera setup
   const { hasPermission } = useCameraPermission();
   const device = useCameraDevice("back");
+  const camera = useRef<Camera>(null);
 
+  // App state
   const isFocused = useIsFocused();
   const appState = useAppState();
   const isActive = isFocused && appState === "active";
 
-  const camera = useRef<Camera>(null);
+  // Camera state
   const [zoom, setZoom] = useState(device?.neutralZoom ?? 1);
+  const format = useCameraFormat(device, [{ fps: 30 }]);
+  const fps = format?.maxFps;
 
+  // Custom hooks
   const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(width, height);
+  const { flashOpacity, triggerFlash } = useCameraFlash();
+  const { takePicture } = useTakePicture({
+    cameraRef: camera,
+    onPhotoTaken: addPhoto,
+  });
+  const { pickImage } = useImagePicker({
+    onImagePicked: addPhoto,
+  });
 
+  // Initialize grid lines on mount
   useEffect(() => {
-    addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85);
-    console.log("Lines added for first time");
+    addNeubauerChamberLines(
+      GRID_CONFIG.rows,
+      GRID_CONFIG.cols,
+      GRID_CONFIG.strokeWidth,
+      GRID_CONFIG.color,
+      GRID_CONFIG.opacity
+    );
+  }, [addNeubauerChamberLines]);
+
+  // Toggle grid visibility
+  const toggleGrid = useCallback(() => {
+    if (lines.length > 0) {
+      clearLines();
+    } else {
+      addNeubauerChamberLines(
+        GRID_CONFIG.rows,
+        GRID_CONFIG.cols,
+        GRID_CONFIG.strokeWidth,
+        GRID_CONFIG.color,
+        GRID_CONFIG.opacity
+      );
+    }
+  }, [lines.length, clearLines, addNeubauerChamberLines]);
+
+  // Handle zoom change
+  const handleZoomChange = useCallback((value: number) => {
+    setZoom(value);
   }, []);
 
+  // Permission check
   if (!hasPermission) {
     return <CameraPermissionRequest />;
   }
 
+  // Device check
   if (!device) {
-    return (
-      <View className="flex-1 justify-center">
-        <Text>Device not found</Text>
-      </View>
-    );
+    return <DeviceNotFound />;
   }
-
-  const toggleGrid = () => {
-    if (lines.length > 0) {
-      clearLines();
-    } else {
-      addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85);
-    }
-  };
-
-  const flashOpacity = useRef(new Animated.Value(0)).current;
-
-  const triggerFlash = () => {
-    Animated.sequence([
-      Animated.timing(flashOpacity, {
-        toValue: 1,
-        duration: 50,
-        useNativeDriver: true,
-      }),
-      Animated.timing(flashOpacity, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const takePicture = async () => {
-    console.log("Taking picture...");
-    if (!camera.current) {
-      return;
-    }
-
-    console.log("Camera ref is set, capturing photo...");
-
-    try {
-      const photo = await camera.current.takePhoto();
-      console.log("Photo taken:", photo);
-      addPhoto(photo);
-    } catch (e) {
-      console.error("Failed to take photo", e);
-    }
-  };
-
-  const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permissionResult.granted) {
-      Alert.alert(
-        "Permission required",
-        "Permission to access the media library is required."
-      );
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      const selectedAsset = result.assets[0];
-      addPhoto({ uri: selectedAsset.uri } as any);
-    }
-  };
-
-  const frameProcessor = useFrameProcessor((frame) => {
-    "worklet";
-  }, []);
-
-  const format = useCameraFormat(device, [{ fps: 30 }]);
-  const fps = format?.maxFps;
 
   return (
     <View className="flex-1 justify-center">
-      <Pressable style={{ flex: 1 }} onPress={takePicture}>
+      {/* Camera View */}
+      <Pressable className="flex-1" onPress={takePicture}>
         <Camera
           ref={camera}
           style={{ flex: 1 }}
           device={device}
           isActive={isActive}
           photo={true}
-          frameProcessor={frameProcessor}
           format={format}
           fps={fps}
           enableZoomGesture={true}
@@ -156,50 +118,23 @@ export default function CameraScreen() {
         />
       </Pressable>
 
-      {/* Component to draw lines superimposed */}
+      {/* Grid Overlay */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
         <CameraOverlay lines={lines} />
       </View>
 
-      {/* Flash Overlay */}
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          { backgroundColor: "white", opacity: flashOpacity },
-        ]}
-        pointerEvents="none"
+      {/* Flash Effect */}
+      <FlashOverlay opacity={flashOpacity} />
+
+      {/* Controls */}
+      <CameraControls
+        zoom={zoom}
+        onZoomChange={handleZoomChange}
+        device={device}
+        onToggleGrid={toggleGrid}
+        onTakePicture={takePicture}
+        onPickImage={pickImage}
       />
-
-      {/* Zoom Slider */}
-      <View className="absolute bottom-0 w-full px-8 items-center h-40 justify-evenly bg-[rgba(0,0,0,0.3)]">
-        <Slider
-          defaultValue={zoom}
-          minValue={device?.minZoom ?? 1}
-          maxValue={Math.min(device?.maxZoom ?? 1, 10)} // Cap at 10x
-          value={zoom}
-          onChange={(value) => {
-            setZoom(value);
-          }}
-          className="w-1/2"
-        >
-          <SliderTrack>
-            <SliderFilledTrack />
-          </SliderTrack>
-          <SliderThumb />
-        </Slider>
-
-        <HStack className="w-full px-12 justify-between items-center">
-          <Button onPress={toggleGrid} size="xl" className="rounded-full">
-            <ButtonIcon as={Grid3x3} />
-          </Button>
-          <Button onPress={takePicture} variant="link" size="xl" className="p-0">
-            <ButtonIcon as={Aperture} size="xl" className="w-20 h-20 text-white" />
-          </Button>
-          <Button onPress={pickImage} size="xl" className="rounded-full">
-            <ButtonIcon as={Images} />
-          </Button>
-        </HStack>
-      </View>
     </View>
   );
 }
