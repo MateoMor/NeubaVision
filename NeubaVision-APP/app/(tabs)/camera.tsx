@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Text,
@@ -8,7 +8,7 @@ import {
   Pressable,
   Animated,
 } from "react-native";
-import { Aperture, Images, Trash2 } from "lucide-react-native";
+import { Grid3x3, Images, Aperture } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
@@ -49,6 +49,11 @@ export default function CameraScreen() {
 
   const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(width, height);
 
+  useEffect(() => {
+    addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85);
+    console.log("Lines added for first time");
+  }, []);
+
   if (!hasPermission) {
     return <CameraPermissionRequest />;
   }
@@ -61,9 +66,13 @@ export default function CameraScreen() {
     );
   }
 
-  function toggleCameraFacing() {
-    console.log("Toggling camera facing...");
-  }
+  const toggleGrid = () => {
+    if (lines.length > 0) {
+      clearLines();
+    } else {
+      addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85);
+    }
+  };
 
   const flashOpacity = useRef(new Animated.Value(0)).current;
 
@@ -162,7 +171,7 @@ export default function CameraScreen() {
       />
 
       {/* Zoom Slider */}
-      <View className="absolute bottom-0 w-full px-8 items-center h-40 justify-evenly bg-[rgba(0,0,0,0.2)]">
+      <View className="absolute bottom-0 w-full px-8 items-center h-40 justify-evenly bg-[rgba(0,0,0,0.3)]">
         <Slider
           defaultValue={zoom}
           minValue={device?.minZoom ?? 1}
@@ -179,21 +188,15 @@ export default function CameraScreen() {
           <SliderThumb />
         </Slider>
 
-        <HStack className="w-full px-16 justify-center items-center gap-4">
-          <Button onPress={toggleCameraFacing}>
-            <Text>Flip</Text>
-          </Button>
-          <Button onPress={() => addNeubauerChamberLines(4, 4, 2, "#00FF00", 0.85)}>
-            <Text>Draw</Text>
+        <HStack className="w-full px-12 justify-between items-center">
+          <Button onPress={toggleGrid} size="xl" className="rounded-full">
+            <ButtonIcon as={Grid3x3} />
           </Button>
           <Button onPress={takePicture} variant="link" size="xl" className="p-0">
-            <ButtonIcon as={Aperture} size="xl" className="w-20 h-20" />
+            <ButtonIcon as={Aperture} size="xl" className="w-20 h-20 text-white" />
           </Button>
-          <Button onPress={pickImage}>
-            <ButtonIcon as={Images} size="lg" className="w-8 h-8" />
-          </Button>
-          <Button onPress={clearLines}>
-            <ButtonIcon as={Trash2} size="lg" className="w-8 h-8" />
+          <Button onPress={pickImage} size="xl" className="rounded-full">
+            <ButtonIcon as={Images} />
           </Button>
         </HStack>
       </View>
