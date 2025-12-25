@@ -11,6 +11,7 @@ import { useLineDrawing } from "@/hooks/useLineDrawing";
 import { useCameraFlash } from "@/hooks/useCameraFlash";
 import { useTakePicture } from "@/hooks/useTakePicture";
 import { useImagePicker } from "@/hooks/useImagePicker";
+import { useCropImage } from "@/hooks/useCropImage";
 import {
   useCameraPermission,
   useCameraDevice,
@@ -49,11 +50,20 @@ export default function CameraScreen() {
   const fps = format?.maxFps;
 
   // Custom hooks
-  const { lines, clearLines, addNeubauerChamberLines } = useLineDrawing(width, height);
+  const { lines, cropBounds, clearLines, addNeubauerChamberLines } = useLineDrawing(
+    width,
+    height
+  );
   const { flashOpacity, triggerFlash } = useCameraFlash();
+  const { cropImage } = useCropImage({
+    cropBounds,
+    screenWidth: width,
+    screenHeight: height,
+  });
   const { takePicture } = useTakePicture({
     cameraRef: camera,
     onPhotoTaken: addPhoto,
+    cropImage,
   });
   const { pickImage } = useImagePicker({
     onImagePicked: addPhoto,

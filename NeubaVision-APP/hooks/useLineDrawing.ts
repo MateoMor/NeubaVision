@@ -1,6 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Line } from "@/types/Line";
 import { createLine } from "@/components/CameraOverlay";
+
+export type CropBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} | null;
 
 export const useLineDrawing = (
   width: number = 0,
@@ -8,15 +15,18 @@ export const useLineDrawing = (
 ) => {
   // State to store lines to draw
   const [lines, setLines] = useState<Line[]>([]);
+  // State to store crop bounds for the Neubauer grid
+  const [cropBounds, setCropBounds] = useState<CropBounds>(null);
 
   // Function to add a line
   const addLine = useCallback((line: Line) => {
     setLines((prev) => [...prev, line]);
   }, []);
 
-  // Function to clear all lines
+  // Function to clear all lines and crop bounds
   const clearLines = useCallback(() => {
     setLines([]);
+    setCropBounds(null);
   }, []);
 
   // Function to draw a line (helper simplified)
@@ -81,12 +91,21 @@ export const useLineDrawing = (
       drawLine(topLeftX, topLeftY, topLeftX, bottomRightY, outerColor, outerThickness);
       // Right
       drawLine(bottomRightX, topLeftY, bottomRightX, bottomRightY, outerColor, outerThickness);
+
+      // Set crop bounds for photo cropping
+      setCropBounds({
+        x: topLeftX,
+        y: topLeftY,
+        width: size,
+        height: size,
+      });
     },
     [width, height, drawLine]
   );
 
   return {
     lines,
+    cropBounds,
     addLine,
     clearLines,
     drawLine,
