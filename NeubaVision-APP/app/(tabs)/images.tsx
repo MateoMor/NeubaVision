@@ -1,36 +1,27 @@
 import React from "react";
-import { Image, ScrollView, StyleSheet, View, Platform } from "react-native";
+import { Image, FlatList, View } from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
 
-const styles = StyleSheet.create({
-  scrollView: {
-    alignItems: "center",
-  },
-  image: {
-    width: 300,
-    height: 400,
-    marginBottom: 15,
-    resizeMode: "contain",
-  },
-});
-
-export default function imageScreen() {
+export default function ImagesScreen() {
   const photos = usePhotosStore((state) => state.photos);
 
-  console.log("photos", photos);
-
   return (
-    <View className="flex-1 p-10 bg-white">
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        {photos.map((photo, index) => (
-          <Image
-            key={index}
-            source={{ uri: photo.path }}
-            className="mb-4 w-72 h-96"
-            style={styles.image}
-          />
-        ))}
-      </ScrollView>
+    <View className="flex-1 bg-white">
+      <FlatList
+        data={photos}
+        numColumns={3}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View className="w-1/3 aspect-square p-0.5">
+            <Image
+              source={{ uri: item.path }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          </View>
+        )}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
     </View>
   );
 }

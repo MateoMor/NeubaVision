@@ -9,6 +9,7 @@ type ModelState = {
   model: TensorflowModel | null;
   loading: boolean;
   error: string | null;
+  inferenceRunning: boolean;
   classNames: string[];
   loadModel: () => Promise<void>;
   runInference: (imagePath: string) => Promise<BoundingBox[]>;
@@ -19,6 +20,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
   model: null,
   loading: false,
   error: null,
+  inferenceRunning: false,
   classNames: ["object"],
 
   setClassNames: (names: string[]) => set({ classNames: names }),
@@ -46,6 +48,7 @@ export const useModelStore = create<ModelState>((set, get) => ({
   },
 
   runInference: async (imagePath: string) => {
+    set({ inferenceRunning: true });
     const { model, classNames } = get();
 
     if (!model) {
@@ -76,9 +79,12 @@ export const useModelStore = create<ModelState>((set, get) => ({
 
       console.log(`Inference complete: ${detections.length} detections found`);
 
+      set({ inferenceRunning: false });
+
       return detections;
     } catch (error) {
       console.error("Inference error:", error);
+      set({ inferenceRunning: false });
       throw new Error(
         error instanceof Error ? error.message : "Inference failed"
       );
