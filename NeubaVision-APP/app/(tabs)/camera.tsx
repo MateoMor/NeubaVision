@@ -2,11 +2,13 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { View, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
+import { useModelStore } from "@/store/useModelStore"; // Import useModelStore
 import { CameraOverlay } from "@/components/CameraOverlay";
 import { CameraPermissionRequest } from "@/components/CameraPermissionRequest";
 import { CameraControls } from "@/components/CameraControls";
 import { FlashOverlay } from "@/components/FlashOverlay";
 import { DeviceNotFound } from "@/components/DeviceNotFound";
+import { InferenceStatusToast } from "@/components/InferenceStatusToast"; // Import Toast
 import { useLineDrawing } from "@/hooks/useLineDrawing";
 import { useCameraFlash } from "@/hooks/useCameraFlash";
 import { useTakePicture } from "@/hooks/useTakePicture";
@@ -17,6 +19,7 @@ import {
   useCameraDevice,
   Camera,
   useCameraFormat,
+  PhotoFile, // Import PhotoFile type
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
@@ -31,7 +34,8 @@ const GRID_CONFIG = {
 } as const;
 
 export default function CameraScreen() {
-  const addPhoto = usePhotosStore((state) => state.addPhoto);
+  const { addPhoto, updatePhotoStatus, setDetections } = usePhotosStore();
+  const { runInference } = useModelStore();
   const { width, height } = useWindowDimensions();
 
   // Camera setup
@@ -60,13 +64,46 @@ export default function CameraScreen() {
     screenWidth: width,
     screenHeight: height,
   });
+
+  // Handler for photo taken
+  const handlePhotoTaken = useCallback(
+    async (photo: PhotoFile) => {
+      // 1. Determine the effective path (wrapper logic is in store, but we need it for updates)
+      // usePhotosStore handles the wrapping of path, so we can use the raw path for status updates
+      // as updatePhotoStatus checks both.
+
+      // 2. Add photo to gallery immediately
+      addPhoto(photo);
+
+      // 3. Start inference in background (non-blocking)
+      (async () => {
+        const photoPath = photo.path;
+        try {
+          updatePhotoStatus(photoPath, "preprocessing");
+          // Small delay to let users see steps (optional, removes flicker)
+          await new Promise((r) => setTimeout(r, 500));
+
+          updatePhotoStatus(photoPath, "inference");
+          const detections = await runInference(photoPath);
+
+          setDetections(photoPath, detections);
+          updatePhotoStatus(photoPath, "completed");
+        } catch (error) {
+          console.error("Inference pipeline failed:", error);
+          updatePhotoStatus(photoPath, "error");
+        }
+      })();
+    },
+    [addPhoto, updatePhotoStatus, setDetections, runInference]
+  );
+
   const { takePicture } = useTakePicture({
     cameraRef: camera,
-    onPhotoTaken: addPhoto,
+    onPhotoTaken: handlePhotoTaken,
     cropImage,
   });
   const { pickImage } = useImagePicker({
-    onImagePicked: addPhoto,
+    onImagePicked: handlePhotoTaken, // Reuse same handler for picked images
   });
 
   // Initialize grid lines on mount
@@ -135,6 +172,9 @@ export default function CameraScreen() {
 
       {/* Flash Effect */}
       <FlashOverlay opacity={flashOpacity} />
+
+      {/* Inference Progress Toast */}
+      <InferenceStatusToast />
 
       {/* Controls */}
       <CameraControls

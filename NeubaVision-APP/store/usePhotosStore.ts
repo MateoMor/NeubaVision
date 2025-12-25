@@ -3,15 +3,23 @@ import { PhotoFile } from "react-native-vision-camera";
 
 import { BoundingBox } from "@/types/BoundingBox";
 
+export type ProcessingStatus = 'pending' | 'preprocessing' | 'inference' | 'postprocessing' | 'completed' | 'error';
+
+export interface GalleryPhoto extends PhotoFile {
+  status: ProcessingStatus;
+  createdAt: number;
+}
+
 type PhotosState = {
-  photos: PhotoFile[];
+  photos: GalleryPhoto[];
   detections: Record<string, BoundingBox[]>;
 
   addPhoto: (photo: PhotoFile) => void;
+  updatePhotoStatus: (photoPath: string, status: ProcessingStatus) => void;
   setDetections: (photoPath: string, boxes: BoundingBox[]) => void;
   clear: () => void;
 
-  getLastPhoto: () => PhotoFile | null;
+  getLastPhoto: () => GalleryPhoto | null;
 };
 
 // Function to normalize the image path
@@ -30,15 +38,29 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
     set((state) => ({
       photos: [
         ...state.photos,
-        { ...photo, path: getImageUri(photo.path) },
+        { 
+          ...photo, 
+          path: getImageUri(photo.path),
+          status: 'pending',
+          createdAt: Date.now()
+        },
       ],
+    })),
+
+  updatePhotoStatus: (photoPath: string, status: ProcessingStatus) =>
+    set((state) => ({
+      photos: state.photos.map((p) =>
+        p.path === photoPath || p.path === getImageUri(photoPath)
+          ? { ...p, status }
+          : p
+      ),
     })),
 
   setDetections: (photoPath: string, boxes: BoundingBox[]) =>
     set((state) => ({
       detections: {
         ...state.detections,
-        [photoPath]: boxes,
+        [getImageUri(photoPath)]: boxes,
       },
     })),
 

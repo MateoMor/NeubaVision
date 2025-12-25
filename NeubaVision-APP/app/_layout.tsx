@@ -1,8 +1,4 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
@@ -28,7 +24,7 @@ export default function RootLayout() {
   const loading = useModelStore((state) => state.loading);
   const classNames = useModelStore((state) => state.classNames);
 
-  /* useEffect(() => {
+  useEffect(() => {
     // Static method to access the store without subscribing
     const { loadModel } = useModelStore.getState();
 
@@ -40,7 +36,7 @@ export default function RootLayout() {
 
     classNames[0] = "Cells";
   }, [model, loading]);
-
+  /*
   const photos = usePhotosStore((state) => state.photos);
 
   useEffect(() => {
