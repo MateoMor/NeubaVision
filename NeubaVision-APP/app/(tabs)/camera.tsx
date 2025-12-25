@@ -35,7 +35,8 @@ const GRID_CONFIG = {
 
 export default function CameraScreen() {
   const { addPhoto, updatePhotoStatus, setDetections } = usePhotosStore();
-  const { runInference } = useModelStore();
+  const { model, loading, loadModel, runInference, setClassNames, inferenceState } =
+    useModelStore();
   const { width, height } = useWindowDimensions();
 
   // Camera setup
@@ -47,6 +48,26 @@ export default function CameraScreen() {
   const isFocused = useIsFocused();
   const appState = useAppState();
   const isActive = isFocused && appState === "active";
+
+  // Load model when camera is active
+  useEffect(() => {
+    let timeoutId: any;
+
+    if (isActive && !model && !loading) {
+      // Wait 1 second after camera is active to ensure smooth feed before starting heavy loading.
+      timeoutId = setTimeout(async () => {
+        try {
+          console.log("Camera is active, loading model in background...");
+          await loadModel();
+          setClassNames(["Cells"]);
+        } catch (error) {
+          console.error("Delayed model load failed:", error);
+        }
+      }, 300);
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [isActive, model, loading]);
 
   // Camera state
   const [zoom, setZoom] = useState(device?.neutralZoom ?? 1);
@@ -74,23 +95,18 @@ export default function CameraScreen() {
 
       // 2. Add photo to gallery immediately
       addPhoto(photo);
+      const photoPath = photo.path;
+      updatePhotoStatus(photoPath, "queued");
 
       // 3. Start inference in background (non-blocking)
       (async () => {
-        const photoPath = photo.path;
         try {
-          updatePhotoStatus(photoPath, "preprocessing");
-          // Small delay to let users see steps (optional, removes flicker)
-          await new Promise((r) => setTimeout(r, 500));
-
-          updatePhotoStatus(photoPath, "inference");
           const detections = await runInference(photoPath);
-
           setDetections(photoPath, detections);
           updatePhotoStatus(photoPath, "completed");
         } catch (error) {
           console.error("Inference pipeline failed:", error);
-          updatePhotoStatus(photoPath, "error");
+          // Error handling already in runInference, but we can double check
         }
       })();
     },

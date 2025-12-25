@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { loadTensorflowModel, TensorflowModel } from "react-native-fast-tflite";
 
 import { BoundingBox } from "@/types/BoundingBox";
+import { usePhotosStore } from "./usePhotosStore";
 import { preprocessImageForYOLO } from "@/utils/inference/imagePreprocessing";
 import { postprocessYOLOOutput } from "@/utils/inference/yoloPostprocessing";
 
@@ -9,18 +10,21 @@ type ModelState = {
   model: TensorflowModel | null;
   loading: boolean;
   error: string | null;
-  inferenceRunning: boolean;
+  inferenceState: "idle" | "preprocessing" | "inference" | "postprocessing";
   classNames: string[];
   loadModel: () => Promise<void>;
   runInference: (imagePath: string) => Promise<BoundingBox[]>;
   setClassNames: (names: string[]) => void;
 };
 
+// Private variable to manage the sequential execution of inferences
+let inferenceQueue = Promise.resolve() as Promise<any>;
+
 export const useModelStore = create<ModelState>((set, get) => ({
   model: null,
   loading: false,
   error: null,
-  inferenceRunning: false,
+  inferenceState: "idle",
   classNames: ["object"],
 
   setClassNames: (names: string[]) => set({ classNames: names }),
@@ -48,46 +52,72 @@ export const useModelStore = create<ModelState>((set, get) => ({
   },
 
   runInference: async (imagePath: string) => {
-    set({ inferenceRunning: true });
-    const { model, classNames } = get();
+    // Append the new inference task to the existing queue
+    const task = async () => {
+      const { model, classNames } = get();
+      const { updatePhotoStatus } = usePhotosStore.getState();
 
-    if (!model) {
-      throw new Error("Model not loaded. Call loadModel() first.");
-    }
+      if (!model) {
+        throw new Error("Model not loaded. Call loadModel() first.");
+      }
 
-    try {
-      console.log("Starting inference pipeline...");
+      try {
+        set({ inferenceState: "preprocessing" });
+        updatePhotoStatus(imagePath, "preprocessing");
+        console.log(`Starting inference for: ${imagePath}`);
 
-      // 1. Preprocessing
-      const { tensor } = await preprocessImageForYOLO(imagePath, 640);
+        let deltatime = new Date().getTime();
+        // 1. Preprocessing
+        const { tensor } = await preprocessImageForYOLO(imagePath, 640);
+        deltatime = new Date().getTime() - deltatime;
+        console.debug(`Preprocessing time: ${deltatime} ms`);
 
-      // 2. Inference
-      console.log("Running model inference...");
-      const output = await model.run([tensor]);
 
-      // 3. Postprocessing
-      const detections = postprocessYOLOOutput(
-        output[0] as Float32Array,
-        classNames,
-        {
-          numPredictions: 8400,
-          imgSize: 640,
-          confidenceThreshold: 0.25,
-          iouThreshold: 0.45,
-        }
-      );
+        set({ inferenceState: "inference" });
+        updatePhotoStatus(imagePath, "inference");
 
-      console.log(`Inference complete: ${detections.length} detections found`);
+        deltatime = new Date().getTime();
+        // 2. Inference
+        console.log("Running model inference...");
+        const output = await model.run([tensor]);
+        deltatime = new Date().getTime() - deltatime;
+        console.debug(`Inference time: ${deltatime} ms`);
 
-      set({ inferenceRunning: false });
+        set({ inferenceState: "postprocessing" });
+        updatePhotoStatus(imagePath, "postprocessing");
+        
+        deltatime = new Date().getTime();
+        // 3. Postprocessing
+        const detections = postprocessYOLOOutput(
+          output[0] as Float32Array,
+          classNames,
+          {
+            numPredictions: 8400,
+            imgSize: 640,
+            confidenceThreshold: 0.25,
+            iouThreshold: 0.45,
+          }
+        );
+        deltatime = new Date().getTime() - deltatime;
+        console.debug(`Postprocessing time: ${deltatime} ms`);
 
-      return detections;
-    } catch (error) {
-      console.error("Inference error:", error);
-      set({ inferenceRunning: false });
-      throw new Error(
-        error instanceof Error ? error.message : "Inference failed"
-      );
-    }
+        console.debug(`Inference complete: ${detections.length} detections found`);
+        set({ inferenceState: "idle" });
+        // Status completion is usually handled by the caller, but we can do it here too 
+        // to ensure consistency if the caller misses it.
+        return detections;
+      } catch (error) {
+        console.error("Inference error:", error);
+        set({ inferenceState: "idle" });
+        updatePhotoStatus(imagePath, "error");
+        throw error;
+      }
+    };
+
+    // Chain the task to the queue and return the result of THIS specific task
+    const resultPromise = inferenceQueue.then(task, task); 
+    inferenceQueue = resultPromise.catch(() => {}); // Ensure queue continues even on error
+    
+    return resultPromise;
   },
 }));

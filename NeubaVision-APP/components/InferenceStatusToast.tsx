@@ -1,15 +1,22 @@
 import React from "react";
 import { View, Text, Animated } from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
-import { FadeInUp, FadeOutUp } from "react-native-reanimated";
+import { FadeInUp, FadeOutUp, ReanimatedLogLevel } from "react-native-reanimated";
 import AnimatedRel from "react-native-reanimated";
+import { configureReanimatedLogger } from "react-native-reanimated";
+
+configureReanimatedLogger({
+  strict: false,
+});
 
 export const InferenceStatusToast = () => {
   const photos = usePhotosStore((state) => state.photos);
 
-  // Get photos that are currently being processed
+  // Get photos that are currently being processed or in queue
   const activePhotos = photos.filter((p) =>
-    ["pending", "preprocessing", "inference", "postprocessing"].includes(p.status)
+    ["pending", "queued", "preprocessing", "inference", "postprocessing"].includes(
+      p.status
+    )
   );
 
   if (activePhotos.length === 0) return null;
@@ -21,7 +28,11 @@ export const InferenceStatusToast = () => {
       className="absolute top-12 left-4 right-4 bg-zinc-900/90 border border-zinc-700 p-4 rounded-2xl shadow-xl z-50"
     >
       <Text className="text-white font-bold mb-3 text-sm">
-        Procesando {activePhotos.length} imagen{activePhotos.length > 1 ? "es" : ""}...
+        {activePhotos.some((p) => p.status !== "queued")
+          ? `Procesando ${activePhotos.length} imagen${
+              activePhotos.length > 1 ? "es" : ""
+            }`
+          : "Imágenes en cola"}
       </Text>
 
       <View className="gap-y-3">
@@ -31,24 +42,30 @@ export const InferenceStatusToast = () => {
               <Text className="text-zinc-400 text-xs truncate max-w-[80%]">
                 Imagen {photos.length - photos.indexOf(photo)}
               </Text>
-              <Text className="text-green-400 text-xs font-medium">
-                {photo.status === "pending"
-                  ? "0%"
+              <Text
+                className={`${
+                  photo.status === "queued" ? "text-zinc-500" : "text-green-400"
+                } text-xs font-medium`}
+              >
+                {photo.status === "pending" || photo.status === "queued"
+                  ? "En espera"
                   : photo.status === "preprocessing"
-                  ? "30%"
+                  ? "Preparando..."
                   : photo.status === "inference"
-                  ? "60%"
+                  ? "Analizando..."
                   : photo.status === "postprocessing"
-                  ? "90%"
-                  : "100%"}
+                  ? "Finalizando..."
+                  : "Listo"}
               </Text>
             </View>
             <View className="h-1.5 bg-zinc-700 rounded-full w-full overflow-hidden">
               <View
-                className="h-full bg-green-500 rounded-full transition-all duration-300"
+                className={`h-full ${
+                  photo.status === "queued" ? "bg-zinc-600" : "bg-green-500"
+                } rounded-full transition-all duration-300`}
                 style={{
                   width:
-                    photo.status === "pending"
+                    photo.status === "pending" || photo.status === "queued"
                       ? "5%"
                       : photo.status === "preprocessing"
                       ? "33%"

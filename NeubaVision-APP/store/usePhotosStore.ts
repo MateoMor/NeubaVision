@@ -3,7 +3,7 @@ import { PhotoFile } from "react-native-vision-camera";
 
 import { BoundingBox } from "@/types/BoundingBox";
 
-export type ProcessingStatus = 'pending' | 'preprocessing' | 'inference' | 'postprocessing' | 'completed' | 'error';
+export type ProcessingStatus = 'pending' | 'queued' | 'preprocessing' | 'inference' | 'postprocessing' | 'completed' | 'error';
 
 export interface GalleryPhoto extends PhotoFile {
   status: ProcessingStatus;
