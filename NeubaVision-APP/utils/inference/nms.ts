@@ -2,6 +2,7 @@
  * Calculates the area of a bounding box in format (x1, y1, x2, y2)
  */
 export function calculateBoxArea(box: number[]): number {
+  "worklet";
   return (box[2] - box[0]) * (box[3] - box[1]);
 }
 
@@ -9,6 +10,7 @@ export function calculateBoxArea(box: number[]): number {
  * Calculates the intersection between two bounding boxes
  */
 export function calculateIntersection(box1: number[], box2: number[]): number {
+  "worklet";
   const xx1 = Math.max(box1[0], box2[0]);
   const yy1 = Math.max(box1[1], box2[1]);
   const xx2 = Math.min(box1[2], box2[2]);
@@ -29,6 +31,7 @@ export function calculateIoU(
   area1: number,
   area2: number
 ): number {
+  "worklet";
   const inter = calculateIntersection(box1, box2);
   const union = area1 + area2 - inter;
   return union > 0 ? inter / union : 0;
@@ -46,6 +49,7 @@ export function applyNMS(
   scores: number[],
   iouThreshold: number
 ): number[] {
+  "worklet";
   if (boxes.length === 0) return [];
 
   // Pre-calculate areas of all boxes

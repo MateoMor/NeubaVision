@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { Line } from "@/types/Line";
+import { MainSquareGrid } from "@/types/MainSquareGrid";
 import { createLine } from "@/components/CameraOverlay";
 
 export type CropBounds = {
@@ -44,15 +45,35 @@ export const useLineDrawing = (
     [addLine]
   );
 
-    const addNeubauerChamberLines = useCallback(
+  /**
+   * Draws a Neubauer chamber grid on the screen and calculates the main square coordinates.
+   * 
+   * This function creates a square grid centered on the screen, representing the
+   * counting area of a Neubauer chamber. It draws both inner grid lines and an outer border,
+   * and updates the `cropBounds` state for subsequent image cropping/processing.
+   * 
+   * @param gridCols - The number of columns/rows in the grid. Defaults to 4.
+   * @param outerThickness - The line thickness for the outer border of the chamber (default: 4).
+   * @param innerThickness - The line thickness for the internal grid lines (default: 2).
+   * @param color - The hex color string used for the lines (default: "#00FF00").
+   * @param sizeFactor - A multiplier (0-1) that determines the size of the chamber relative to the screen (default: 0.85).
+   * 
+   * @returns An object containing the coordinates (x, y) and dimensions (width, height) of the main square grid.
+   */
+  const addNeubauerChamberLines = useCallback(
     (
       gridCols?: number | any,
       outerThickness: number = 4,
       innerThickness: number = 2,
       color: string = "#00FF00",
       sizeFactor: number = 0.85
-    ) => {
-      if (width === 0 || height === 0) return;
+    ): MainSquareGrid => {
+      if (width === 0 || height === 0) return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+      };
 
       const safeGridCols = typeof gridCols === "number" ? gridCols : 4;
 
@@ -99,6 +120,13 @@ export const useLineDrawing = (
         width: size,
         height: size,
       });
+
+      return {
+        x: topLeftX,
+        y: topLeftY,
+        width: size,
+        height: size,
+      };
     },
     [width, height, drawLine]
   );

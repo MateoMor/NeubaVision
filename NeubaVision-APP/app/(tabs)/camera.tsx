@@ -19,10 +19,18 @@ import {
   useCameraDevice,
   Camera,
   useCameraFormat,
-  PhotoFile, // Import PhotoFile type
+  PhotoFile,
+  useFrameProcessor,
+  runAtTargetFps,
 } from "react-native-vision-camera";
+import { useRunOnJS } from "react-native-worklets-core";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
+import { useResizePlugin } from "vision-camera-resize-plugin";
+import { useSharedValue } from "react-native-reanimated";
+
+import { MainSquareGrid } from "@/types/MainSquareGrid";
+import { postprocessYOLOOutput } from "@/utils/inference/yoloPostprocessing";
 
 // Grid configuration constants
 const GRID_CONFIG = {
@@ -48,6 +56,15 @@ export default function CameraScreen() {
   const isFocused = useIsFocused();
   const appState = useAppState();
   const isActive = isFocused && appState === "active";
+
+  const [mainSquareGrid, setMainSquareGrid] = useState<MainSquareGrid | null>(null);
+
+  // Resize
+  const { resize } = useResizePlugin();
+  const outputTensor = useSharedValue<Float32Array | null>(null);
+  const [shouldCaptureState, setShouldCaptureState] = useState(false);
+
+  useEffect(() => {}, []);
 
   // Load model when camera is active
   useEffect(() => {
@@ -124,12 +141,14 @@ export default function CameraScreen() {
 
   // Initialize grid lines on mount
   useEffect(() => {
-    addNeubauerChamberLines(
-      GRID_CONFIG.rows,
-      GRID_CONFIG.cols,
-      GRID_CONFIG.strokeWidth,
-      GRID_CONFIG.color,
-      GRID_CONFIG.opacity
+    setMainSquareGrid(
+      addNeubauerChamberLines(
+        GRID_CONFIG.rows,
+        GRID_CONFIG.cols,
+        GRID_CONFIG.strokeWidth,
+        GRID_CONFIG.color,
+        GRID_CONFIG.opacity
+      )
     );
   }, [addNeubauerChamberLines]);
 
@@ -138,12 +157,14 @@ export default function CameraScreen() {
     if (lines.length > 0) {
       clearLines();
     } else {
-      addNeubauerChamberLines(
-        GRID_CONFIG.rows,
-        GRID_CONFIG.cols,
-        GRID_CONFIG.strokeWidth,
-        GRID_CONFIG.color,
-        GRID_CONFIG.opacity
+      setMainSquareGrid(
+        addNeubauerChamberLines(
+          GRID_CONFIG.rows,
+          GRID_CONFIG.cols,
+          GRID_CONFIG.strokeWidth,
+          GRID_CONFIG.color,
+          GRID_CONFIG.opacity
+        )
       );
     }
   }, [lines.length, clearLines, addNeubauerChamberLines]);
@@ -151,6 +172,11 @@ export default function CameraScreen() {
   // Handle zoom change
   const handleZoomChange = useCallback((value: number) => {
     setZoom(value);
+  }, []);
+
+  // Worklet-safe function to reset capture state
+  const resetCaptureState = useRunOnJS(() => {
+    setShouldCaptureState(false);
   }, []);
 
   // Permission check
@@ -163,10 +189,62 @@ export default function CameraScreen() {
     return <DeviceNotFound />;
   }
 
+  const frameProcessor = useFrameProcessor(
+    (frame) => {
+      "worklet";
+
+      console.log("shouldCapture.value", shouldCaptureState);
+      if (!shouldCaptureState) return;
+
+      console.log("Frame processor - Capturing inference");
+
+      const deltaTime = Date.now();
+
+      const resized = resize(frame, {
+        crop: {
+          x: mainSquareGrid?.x ?? 0,
+          y: mainSquareGrid?.y ?? 0,
+          width: mainSquareGrid?.width ?? 640,
+          height: mainSquareGrid?.height ?? 640,
+        },
+        scale: {
+          width: 640,
+          height: 640,
+        },
+        pixelFormat: "rgb",
+        dataType: "float32",
+      }) as Float32Array;
+
+      const output = model?.runSync([resized]);
+
+      if (output && output.length > 0) {
+        const detections = postprocessYOLOOutput(output[0] as Float32Array, ["Cell"], {
+          confidenceThreshold: 0.3,
+          iouThreshold: 0.5,
+        });
+
+        console.log("Detections in worklet (One-shot):", detections.length);
+      }
+
+      const deltaTime2 = Date.now() - deltaTime;
+      console.log("Inference time (ms):", deltaTime2);
+
+      // Reset capture state from worklet using runOnJS wrapper
+      resetCaptureState();
+    },
+    [model, mainSquareGrid, shouldCaptureState, resetCaptureState]
+  );
+
+  const captureAndInference = useCallback(() => {
+    setShouldCaptureState(true);
+    console.log("Capture triggered");
+    const photo = takePicture();
+  }, []);
+
   return (
     <View className="flex-1 justify-center">
       {/* Camera View */}
-      <Pressable className="flex-1" onPress={takePicture}>
+      <Pressable className="flex-1" onPress={captureAndInference}>
         <Camera
           ref={camera}
           style={{ flex: 1 }}
@@ -178,6 +256,7 @@ export default function CameraScreen() {
           enableZoomGesture={true}
           onShutter={triggerFlash}
           zoom={zoom}
+          frameProcessor={frameProcessor}
         />
       </Pressable>
 
@@ -198,7 +277,7 @@ export default function CameraScreen() {
         onZoomChange={handleZoomChange}
         device={device}
         onToggleGrid={toggleGrid}
-        onTakePicture={takePicture}
+        onTakePicture={captureAndInference}
         onPickImage={pickImage}
       />
     </View>

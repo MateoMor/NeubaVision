@@ -16,6 +16,7 @@ export function extractDetectionsFromTransposedOutput(
   imgSize: number,
   confidenceThreshold: number
 ): YOLOOutput {
+  "worklet";
   const boxes: number[][] = [];
   const scores: number[] = [];
 
@@ -51,6 +52,7 @@ export function convertToBoundingBoxes(
   indices: number[],
   className: string
 ): BoundingBox[] {
+  "worklet";
   return indices.map((idx) => {
     const [x1, y1, x2, y2] = boxes[idx];
     return {
@@ -80,6 +82,7 @@ export function postprocessYOLOOutput(
     iouThreshold?: number;
   } = {}
 ): BoundingBox[] {
+  "worklet";
   const {
     numPredictions = 8400,
     imgSize = 640,

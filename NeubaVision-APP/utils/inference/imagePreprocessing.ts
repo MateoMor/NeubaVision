@@ -78,17 +78,31 @@ export async function preprocessImageForYOLO(
 ): Promise<PreprocessedImage> {
   console.log("Preprocessing image:", imagePath);
 
+  let deltatime = new Date().getTime();
   // 1. Resize
   const resizedUri = await resizeImage(imagePath, targetSize);
+  deltatime = new Date().getTime() - deltatime;
+  console.debug(`Resize time: ${deltatime} ms`);
 
+  deltatime = new Date().getTime();
   // 2. Read as base64
   const base64 = await readImageAsBase64(resizedUri);
+  deltatime = new Date().getTime() - deltatime;
+  console.debug(`Read as base64 time: ${deltatime} ms`);
+  console.log(base64.length);
 
+
+  deltatime = new Date().getTime();
   // 3. Decode JPEG
   const { data, width, height } = decodeJPEG(base64);
+  deltatime = new Date().getTime() - deltatime;
+  console.debug(`Decode JPEG time: ${deltatime} ms`);
 
+  deltatime = new Date().getTime();
   // 4. Convert to HWC tensor (matches TFLite's NHWC format)
   const tensor = rgbaToTensorHWC(data, width, height);
+  deltatime = new Date().getTime() - deltatime;
+  console.debug(`Convert to HWC tensor time: ${deltatime} ms`);
 
   console.log(`Preprocessed to tensor: [1, ${height}, ${width}, 3] (NHWC format)`);
   console.log(`Tensor size: ${tensor.length}`);
