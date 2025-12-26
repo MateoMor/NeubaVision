@@ -1,13 +1,67 @@
-import React from "react";
-import { View, Text, Animated } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text } from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
-import { FadeInUp, FadeOutUp, ReanimatedLogLevel } from "react-native-reanimated";
-import AnimatedRel from "react-native-reanimated";
+import Animated, { 
+  FadeInUp, 
+  FadeOutUp, 
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from "react-native-reanimated";
 import { configureReanimatedLogger } from "react-native-reanimated";
+import { ProcessingStatus } from "@/types/ProcessingStatus";
 
+// Desactiva el modo estricto para evitar advertencias
 configureReanimatedLogger({
   strict: false,
 });
+
+// Componente para la barra de progreso animada
+const ProgressBar = ({ status }: { status: ProcessingStatus }) => {
+  const progress = useSharedValue(0);
+
+  // Calcula el progreso según el estado
+  const getProgressValue = (status: ProcessingStatus) => {
+    switch (status) {
+      case "pending":
+      case "queued":
+        return 5;
+      case "preprocessing":
+        return 53;
+      case "inference":
+        return 86;
+      case "postprocessing":
+        return 90;
+      default:
+        return 100;
+    }
+  };
+
+  // Actualiza el progreso cuando cambia el estado
+  useEffect(() => {
+    progress.value = withTiming(getProgressValue(status), {
+      duration: 800,
+    });
+  }, [status]);
+
+  // Estilo animado para la barra de progreso
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      width: `${progress.value}%`,
+    };
+  });
+
+  return (
+    <View className="h-1.5 bg-zinc-700 rounded-full w-full overflow-hidden">
+      <Animated.View
+        className={`h-full ${
+          status === "queued" ? "bg-zinc-600" : "bg-green-500"
+        } rounded-full`}
+        style={animatedStyle}
+      />
+    </View>
+  );
+};
 
 export const InferenceStatusToast = () => {
   const photos = usePhotosStore((state) => state.photos);
@@ -22,7 +76,7 @@ export const InferenceStatusToast = () => {
   if (activePhotos.length === 0) return null;
 
   return (
-    <AnimatedRel.View
+    <Animated.View
       entering={FadeInUp}
       exiting={FadeOutUp}
       className="absolute top-12 left-4 right-4 bg-zinc-900/90 border border-zinc-700 p-4 rounded-2xl shadow-xl z-50"
@@ -58,28 +112,10 @@ export const InferenceStatusToast = () => {
                   : "Listo"}
               </Text>
             </View>
-            <View className="h-1.5 bg-zinc-700 rounded-full w-full overflow-hidden">
-              <View
-                className={`h-full ${
-                  photo.status === "queued" ? "bg-zinc-600" : "bg-green-500"
-                } rounded-full transition-all duration-300`}
-                style={{
-                  width:
-                    photo.status === "pending" || photo.status === "queued"
-                      ? "5%"
-                      : photo.status === "preprocessing"
-                      ? "33%"
-                      : photo.status === "inference"
-                      ? "66%"
-                      : photo.status === "postprocessing"
-                      ? "90%"
-                      : "100%",
-                }}
-              />
-            </View>
+            <ProgressBar status={photo.status} />
           </View>
         ))}
       </View>
-    </AnimatedRel.View>
+    </Animated.View>
   );
 };

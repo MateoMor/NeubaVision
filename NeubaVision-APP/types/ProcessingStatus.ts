@@ -1,0 +1,1 @@
+export type ProcessingStatus = 'pending' | 'queued' | 'preprocessing' | 'inference' | 'postprocessing' | 'completed' | 'error';
