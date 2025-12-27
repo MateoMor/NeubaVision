@@ -20,6 +20,7 @@ type PhotosState = {
   deletePhoto: (photoPath: string) => void;
   updateUserCorrection: (photoPath: string, delta: number) => void;
   toggleAccepted: (photoPath: string) => void;
+  deleteAcceptedPhotos: () => void;
 
   getLastPhoto: () => GalleryPhoto | null;
 };
@@ -106,6 +107,21 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
             isAccepted: !current.isAccepted,
           },
         },
+      };
+    }),
+
+  deleteAcceptedPhotos: () =>
+    set((state) => {
+      const acceptedPaths = Object.entries(state.detections)
+        .filter(([_, data]) => data.isAccepted)
+        .map(([path]) => path);
+
+      const newDetections = { ...state.detections };
+      acceptedPaths.forEach((path) => delete newDetections[path]);
+
+      return {
+        photos: state.photos.filter((p) => !acceptedPaths.includes(p.path)),
+        detections: newDetections,
       };
     }),
 
