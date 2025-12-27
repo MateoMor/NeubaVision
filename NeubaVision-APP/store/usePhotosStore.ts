@@ -18,6 +18,7 @@ type PhotosState = {
   updatePhotoStatus: (photoPath: string, status: ProcessingStatus) => void;
   setDetections: (photoPath: string, boxes: BoundingBox[]) => void;
   clear: () => void;
+  deletePhoto: (photoPath: string) => void;
 
   getLastPhoto: () => GalleryPhoto | null;
 };
@@ -65,6 +66,15 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
     })),
 
   clear: () => set({ photos: [], detections: {} }),
+  deletePhoto: (photoPath: string) =>
+    set((state) => {
+      const newDetections = { ...state.detections };
+      delete newDetections[photoPath];
+      return {
+        photos: state.photos.filter((p) => p.path !== photoPath),
+        detections: newDetections,
+      };
+    }),
 
   getLastPhoto: () => {
     const photos = get().photos;

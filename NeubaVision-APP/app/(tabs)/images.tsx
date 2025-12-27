@@ -1,11 +1,23 @@
 import React, { useState } from "react";
-import { FlatList, View, LayoutChangeEvent } from "react-native";
+import {
+  FlatList,
+  View,
+  LayoutChangeEvent,
+  Modal,
+  Pressable,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ImageWithBoundingBoxes } from "@/components/ImageWithBoundingBoxes";
+import { ImageWithBoundingBoxes } from "@/components/tab_images/ImageWithBoundingBoxes";
+import { Ionicons } from "@expo/vector-icons";
+import { ImageOptionsModal } from "@/components/tab_images/ImageOptionsModal";
+
 export default function ImagesScreen() {
-  const detections = usePhotosStore((state) => state.detections);
+  const { detections } = usePhotosStore();
   const [itemSize, setItemSize] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<[string, any] | null>(null);
 
   const GAP = 4;
   const COLUMNS = 3;
@@ -16,17 +28,18 @@ export default function ImagesScreen() {
     const calculatedSize = (width - totalGaps) / COLUMNS;
     setItemSize(calculatedSize);
   };
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <FlatList
-        onLayout={handleLayout} // Obtenemos el tamaño del contenedor padre aquí
+        onLayout={handleLayout}
         data={Object.entries(detections)}
         numColumns={COLUMNS}
         keyExtractor={(item) => item[0]}
-        // columnWrapperStyle aplica el espacio entre las columnas
         columnWrapperStyle={itemSize > 0 ? { gap: GAP, marginBottom: GAP } : undefined}
         renderItem={({ item }) => (
-          <View
+          <Pressable
+            onPress={() => setSelectedImage(item)}
             style={{ width: itemSize, height: itemSize }}
             className="rounded-xl overflow-hidden bg-zinc-100"
           >
@@ -37,9 +50,14 @@ export default function ImagesScreen() {
                 imageSize={itemSize}
               />
             )}
-          </View>
+          </Pressable>
         )}
         contentContainerStyle={{ paddingBottom: 20 }}
+      />
+
+      <ImageOptionsModal
+        selectedImage={selectedImage}
+        setSelectedImage={setSelectedImage}
       />
     </SafeAreaView>
   );
