@@ -4,17 +4,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useWindowDimensions } from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
-import { DetectedBoxes } from "@/types/DetectedBoxes";
+import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
 
 export function ImageOptionsModal({
   selectedImage,
   setSelectedImage,
 }: {
-  selectedImage: [string, DetectedBoxes] | null;
-  setSelectedImage: (image: [string, DetectedBoxes] | null) => void;
+  selectedImage: [string, ProcessedPhotoData] | null;
+  setSelectedImage: (image: [string, ProcessedPhotoData] | null) => void;
 }) {
   const { width: screenWidth } = useWindowDimensions();
-  const { deletePhoto, detections, updateUserCorrection } = usePhotosStore();
+  const { deletePhoto, detections, updateUserCorrection, toggleAccepted } =
+    usePhotosStore();
 
   const currentPath = selectedImage?.[0];
   const currentData = currentPath ? detections[currentPath] : null;
@@ -32,11 +33,19 @@ export function ImageOptionsModal({
     }
   };
 
+  const handleToggleAccepted = () => {
+    if (currentPath) {
+      toggleAccepted(currentPath);
+    }
+  };
+
   if (!selectedImage) return null;
 
   const detectedCount = currentData?.boundingBoxes.length || 0;
   const userCorrection = currentData?.userCountCorrection || 0;
   const totalCount = detectedCount + userCorrection;
+
+  const isAccepted = currentData?.isAccepted || false;
 
   return (
     <Modal
@@ -142,13 +151,36 @@ export function ImageOptionsModal({
               </Pressable>
             </View>
 
-            <Pressable
-              onPress={handleDelete}
-              className="bg-red-500/10 border border-red-500/20 flex-row items-center justify-center py-4 rounded-2xl w-full active:bg-red-500/20"
-            >
-              <Ionicons name="trash" size={20} color="#ef4444" />
-              <Text className="text-red-500 font-bold text-lg ml-2">Borrar Registro</Text>
-            </Pressable>
+            <View className="flex-row gap-4">
+              <Pressable
+                onPress={handleToggleAccepted}
+                className={`flex-1 flex-row items-center justify-center py-4 rounded-2xl border ${
+                  isAccepted
+                    ? "bg-green-500/10 border-green-500/20"
+                    : "bg-blue-500 border-blue-600"
+                } active:opacity-80`}
+              >
+                <Ionicons
+                  name={isAccepted ? "checkmark-circle" : "checkmark"}
+                  size={20}
+                  color={isAccepted ? "#22c55e" : "white"}
+                />
+                <Text
+                  className={`font-bold text-lg ml-2 ${
+                    isAccepted ? "text-green-500" : "text-white"
+                  }`}
+                >
+                  {isAccepted ? "Aceptada" : "Confirmar"}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleDelete}
+                className="bg-red-500/10 border border-red-500/20 flex-row items-center justify-center py-4 px-6 rounded-2xl active:bg-red-500/20"
+              >
+                <Ionicons name="trash" size={20} color="#ef4444" />
+              </Pressable>
+            </View>
           </View>
         </SafeAreaView>
       </View>

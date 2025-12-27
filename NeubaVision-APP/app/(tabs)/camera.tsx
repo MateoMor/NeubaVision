@@ -103,7 +103,11 @@ export default function CameraScreen() {
       (async () => {
         try {
           const detections = await runInference(photoPath);
-          setDetections(photoPath, { boundingBoxes: detections, userCountCorrection: 0 });
+          setDetections(photoPath, {
+            boundingBoxes: detections,
+            userCountCorrection: 0,
+            isAccepted: false,
+          });
           updatePhotoStatus(photoPath, "completed");
         } catch (error) {
           console.error("Inference pipeline failed:", error);

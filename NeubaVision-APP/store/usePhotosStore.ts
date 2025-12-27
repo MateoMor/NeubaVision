@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { PhotoFile } from "react-native-vision-camera";
 
 import { ProcessingStatus } from "@/types/ProcessingStatus";
-import { DetectedBoxes } from "@/types/DetectedBoxes";
+import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
 
 export interface GalleryPhoto extends PhotoFile {
   status: ProcessingStatus;
@@ -11,14 +11,15 @@ export interface GalleryPhoto extends PhotoFile {
 
 type PhotosState = {
   photos: GalleryPhoto[];
-  detections: Record<string, DetectedBoxes>;
+  detections: Record<string, ProcessedPhotoData>;
 
   addPhoto: (photo: PhotoFile) => void;
   updatePhotoStatus: (photoPath: string, status: ProcessingStatus) => void;
-  setDetections: (photoPath: string, detections: DetectedBoxes) => void;
+  setDetections: (photoPath: string, detections: ProcessedPhotoData) => void;
   clear: () => void;
   deletePhoto: (photoPath: string) => void;
   updateUserCorrection: (photoPath: string, delta: number) => void;
+  toggleAccepted: (photoPath: string) => void;
 
   getLastPhoto: () => GalleryPhoto | null;
 };
@@ -57,7 +58,7 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
       ),
     })),
 
-  setDetections: (photoPath: string, detections: DetectedBoxes) =>
+  setDetections: (photoPath: string, detections: ProcessedPhotoData) =>
     set((state) => ({
       detections: {
         ...state.detections,
@@ -87,6 +88,22 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
           [photoPath]: {
             ...current,
             userCountCorrection: current.userCountCorrection + delta,
+          },
+        },
+      };
+    }),
+
+  toggleAccepted: (photoPath: string) =>
+    set((state) => {
+      const current = state.detections[photoPath];
+      if (!current) return state;
+
+      return {
+        detections: {
+          ...state.detections,
+          [photoPath]: {
+            ...current,
+            isAccepted: !current.isAccepted,
           },
         },
       };
