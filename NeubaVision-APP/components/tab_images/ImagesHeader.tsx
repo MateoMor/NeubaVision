@@ -44,7 +44,7 @@ export function ImagesHeader({
         {acceptedCount > 0 && (
           <Pressable
             onPress={deleteAcceptedPhotos}
-            className={`p-2 rounded-full active:opacity-70 ${
+            className={`p-1 rounded-full active:opacity-70 ${
               isDark ? "bg-red-500/10" : "bg-red-50"
             }`}
           >

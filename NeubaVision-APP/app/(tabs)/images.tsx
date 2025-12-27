@@ -14,6 +14,7 @@ export default function ImagesScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const detections = usePhotosStore((state) => state.detections);
+  const toggleAccepted = usePhotosStore((state) => state.toggleAccepted);
   const deleteAcceptedPhotos = usePhotosStore((state) => state.deleteAcceptedPhotos);
   const [itemSize, setItemSize] = useState(0);
   const [selectedImage, setSelectedImage] = useState<[string, ProcessedPhotoData] | null>(
@@ -49,6 +50,8 @@ export default function ImagesScreen() {
         renderItem={({ item }) => (
           <Pressable
             onPress={() => setSelectedImage(item)}
+            onLongPress={() => toggleAccepted(item[0])}
+            delayLongPress={240}
             style={{ width: itemSize, height: itemSize }}
             className={`rounded-xl overflow-hidden ${
               isDark ? "bg-zinc-900" : "bg-zinc-100"
