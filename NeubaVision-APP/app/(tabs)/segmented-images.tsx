@@ -16,7 +16,8 @@ export default function segmendImage() {
         {Object.entries(detections).map(([photoPath, boxes]) => (
           <View key={photoPath} className="mb-8">
             <Text className="font-semibold mb-2 text-gray-600">
-              Found {boxes.length} object{boxes.length !== 1 ? "s" : ""}
+              Found {boxes.boundingBoxes.length} object
+              {boxes.boundingBoxes.length !== 1 ? "s" : ""}
             </Text>
 
             {/* Contenedor de imagen con bounding boxes */}
@@ -33,7 +34,7 @@ export default function segmendImage() {
                 resizeMode="cover"
               />
               <BoundingBoxOverlay
-                detections={boxes}
+                detections={boxes.boundingBoxes}
                 imageWidth={imageSize}
                 imageHeight={imageSize}
                 originalWidth={640}

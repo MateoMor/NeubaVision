@@ -1,9 +1,8 @@
 import { create } from "zustand";
 import { PhotoFile } from "react-native-vision-camera";
 
-import { BoundingBox } from "@/types/BoundingBox";
 import { ProcessingStatus } from "@/types/ProcessingStatus";
-
+import { DetectedBoxes } from "@/types/DetectedBoxes";
 
 export interface GalleryPhoto extends PhotoFile {
   status: ProcessingStatus;
@@ -12,13 +11,14 @@ export interface GalleryPhoto extends PhotoFile {
 
 type PhotosState = {
   photos: GalleryPhoto[];
-  detections: Record<string, BoundingBox[]>;
+  detections: Record<string, DetectedBoxes>;
 
   addPhoto: (photo: PhotoFile) => void;
   updatePhotoStatus: (photoPath: string, status: ProcessingStatus) => void;
-  setDetections: (photoPath: string, boxes: BoundingBox[]) => void;
+  setDetections: (photoPath: string, detections: DetectedBoxes) => void;
   clear: () => void;
   deletePhoto: (photoPath: string) => void;
+  updateUserCorrection: (photoPath: string, delta: number) => void;
 
   getLastPhoto: () => GalleryPhoto | null;
 };
@@ -57,11 +57,11 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
       ),
     })),
 
-  setDetections: (photoPath: string, boxes: BoundingBox[]) =>
+  setDetections: (photoPath: string, detections: DetectedBoxes) =>
     set((state) => ({
       detections: {
         ...state.detections,
-        [getImageUri(photoPath)]: boxes,
+        [getImageUri(photoPath)]: detections,
       },
     })),
 
@@ -73,6 +73,22 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
       return {
         photos: state.photos.filter((p) => p.path !== photoPath),
         detections: newDetections,
+      };
+    }),
+
+  updateUserCorrection: (photoPath: string, delta: number) =>
+    set((state) => {
+      const current = state.detections[photoPath];
+      if (!current) return state;
+
+      return {
+        detections: {
+          ...state.detections,
+          [photoPath]: {
+            ...current,
+            userCountCorrection: current.userCountCorrection + delta,
+          },
+        },
       };
     }),
 

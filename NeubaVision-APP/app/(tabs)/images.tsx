@@ -46,7 +46,7 @@ export default function ImagesScreen() {
             {itemSize > 0 && (
               <ImageWithBoundingBoxes
                 photoPath={item[0]}
-                boxes={item[1]}
+                boxes={item[1].boundingBoxes}
                 imageSize={itemSize}
               />
             )}
