@@ -2,7 +2,7 @@ import { View, Text, Image, ScrollView, Dimensions } from "react-native";
 import React from "react";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
-import { BoundingBoxOverlay } from "@/components/BoundingBoxOverlay";
+import { BoundingBoxOverlay } from "@/components/tab_images/BoundingBoxOverlay";
 
 export default function segmendImage() {
   const detections = usePhotosStore((state) => state.detections);

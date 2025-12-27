@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { Line } from "@/types/Line";
-import { createLine } from "@/components/CameraOverlay";
+import { createLine } from "@/components/tab_camera/CameraOverlay";
 
 export type CropBounds = {
   x: number;
