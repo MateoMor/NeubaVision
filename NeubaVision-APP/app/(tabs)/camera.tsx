@@ -3,12 +3,12 @@ import { View, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { useModelStore } from "@/store/useModelStore"; // Import useModelStore
-import { CameraOverlay } from "@/components/CameraOverlay";
-import { CameraPermissionRequest } from "@/components/CameraPermissionRequest";
-import { CameraControls } from "@/components/CameraControls";
-import { FlashOverlay } from "@/components/FlashOverlay";
-import { DeviceNotFound } from "@/components/DeviceNotFound";
-import { InferenceStatusToast } from "@/components/InferenceStatusToast"; // Import Toast
+import { CameraOverlay } from "@/components/tab_camera/CameraOverlay";
+import { CameraPermissionRequest } from "@/components/tab_camera/CameraPermissionRequest";
+import { CameraControls } from "@/components/tab_camera/CameraControls";
+import { FlashOverlay } from "@/components/tab_camera/FlashOverlay";
+import { DeviceNotFound } from "@/components/tab_camera/DeviceNotFound";
+import { InferenceStatusToast } from "@/components/tab_camera/InferenceStatusToast"; // Import Toast
 import { useLineDrawing } from "@/hooks/useLineDrawing";
 import { useCameraFlash } from "@/hooks/useCameraFlash";
 import { useTakePicture } from "@/hooks/useTakePicture";
@@ -23,7 +23,7 @@ import {
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
-import { LoadModelStatusToast } from "@/components/LoadModelStatusToast";
+import { LoadModelStatusToast } from "@/components/tab_camera/LoadModelStatusToast";
 
 // Grid configuration constants
 const GRID_CONFIG = {
