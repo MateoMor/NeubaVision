@@ -23,6 +23,7 @@ import {
 } from "react-native-vision-camera";
 import { useIsFocused } from "@react-navigation/native";
 import { useAppState } from "@react-native-community/hooks";
+import { LoadModelStatusToast } from "@/components/LoadModelStatusToast";
 
 // Grid configuration constants
 const GRID_CONFIG = {
@@ -191,6 +192,9 @@ export default function CameraScreen() {
 
       {/* Inference Progress Toast */}
       <InferenceStatusToast />
+
+      {/* Model Loading Status Toast */}
+      <LoadModelStatusToast />
 
       {/* Controls */}
       <CameraControls
