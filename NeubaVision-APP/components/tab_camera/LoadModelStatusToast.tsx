@@ -5,18 +5,18 @@ import { useModelStore } from "@/store/useModelStore";
 export const LoadModelStatusToast = () => {
   const { loading, model } = useModelStore();
   const [isVisible, setIsVisible] = useState(true);
-  const [statusText, setStatusText] = useState("Cargando");
+  const [statusText, setStatusText] = useState("Cargando IA...");
 
   useEffect(() => {
     if (loading) {
-      setStatusText("Cargando");
+      setStatusText("Cargando IA...");
     } else if (model) {
-      setStatusText("Completado");
+      setStatusText("IA lista");
 
-      // Esperar 2 segundos y cerrar
+      // wait 1 second and close
       const timer = setTimeout(() => {
         setIsVisible(false);
-      }, 2000);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [loading, model]);
@@ -25,14 +25,13 @@ export const LoadModelStatusToast = () => {
 
   return (
     <View className="absolute top-12 left-4 right-4 bg-zinc-900/90 border border-zinc-700 p-4 rounded-2xl shadow-xl z-50">
-      <View className="flex-row justify-between items-center mb-3">
-        <Text className="text-white font-bold text-sm">{statusText}</Text>
+      <View className="flex-row justify-between items-center">
         <Text
           className={`${
-            statusText === "Completado" ? "text-green-400" : "text-amber-400"
-          } text-xs font-medium`}
+            statusText === "IA lista" ? "text-green-400" : "text-amber-400"
+          } font-bold text-sm`}
         >
-          {statusText === "Completado" ? "Completado" : "Cargando..."}
+          {statusText}
         </Text>
       </View>
     </View>
