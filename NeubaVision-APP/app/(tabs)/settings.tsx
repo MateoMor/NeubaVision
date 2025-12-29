@@ -1,12 +1,20 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import React from "react";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Colors } from "@/constants/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { SettingsHeader } from "@/components/tab_settings/SettingsHeader";
 
 export default function SettingsScreen() {
+  const colorScheme = useColorScheme();
+  const themeColors = Colors[colorScheme ?? "light"];
+
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="p-5">
-        <Text className="text-2xl font-bold mb-4">Settings</Text>
-      </View>
-    </ScrollView>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.background }}>
+      <SettingsHeader />
+      <ScrollView className="flex-1" style={{ backgroundColor: themeColors.background }}>
+        <View className="p-5">{/* Contenido de settings aquí */}</View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
