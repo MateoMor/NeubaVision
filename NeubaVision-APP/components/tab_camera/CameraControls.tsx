@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { Grid3x3, Images, Aperture } from "lucide-react-native";
+import { Grid3x3, Images, Circle } from "lucide-react-native";
 import { CameraDevice } from "react-native-vision-camera";
 
 import { HStack } from "@/components/ui/hstack";
@@ -58,7 +58,7 @@ export const CameraControls = ({
           <ButtonIcon as={Grid3x3} />
         </Button>
         <Button onPress={onTakePicture} variant="link" size="xl" className="p-0">
-          <ButtonIcon as={Aperture} size="xl" className="w-20 h-20 text-white" />
+          <ButtonIcon as={Circle} size="xl" className="w-20 h-20 text-white" />
         </Button>
         <Button onPress={onPickImage} size="xl" className="rounded-full">
           <ButtonIcon as={Images} />
