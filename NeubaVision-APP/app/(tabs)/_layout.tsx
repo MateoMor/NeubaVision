@@ -1,9 +1,9 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs } from "expo-router";
+import React from "react";
 
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -11,9 +11,10 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -23,22 +24,24 @@ export default function TabLayout() {
       <Tabs.Screen
         name="camera"
         options={{
-          title: 'Camera',
-          tabBarIcon: ({ color }) => <FontAwesome size={24} name="camera" color={color} />,
+          title: "Camera",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome size={24} name="camera" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="images"
         options={{
-          title: 'Images',
+          title: "Images",
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="image" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="segmented-images"
+        name="settings"
         options={{
-          title: 'Segmented Image',
-          tabBarIcon: ({ color }) => <FontAwesome size={24} name="scissors" color={color} />,
+          title: "Settings",
+          tabBarIcon: ({ color }) => <FontAwesome size={24} name="cog" color={color} />,
         }}
       />
     </Tabs>
