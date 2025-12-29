@@ -17,6 +17,7 @@ type PhotosState = {
   updatePhotoStatus: (photoPath: string, status: ProcessingStatus) => void;
   setDetections: (photoPath: string, detections: ProcessedPhotoData) => void;
   clear: () => void;
+  clearAllPhotos: () => void;
   deletePhoto: (photoPath: string) => void;
   updateUserCorrection: (photoPath: string, delta: number) => void;
   toggleAccepted: (photoPath: string) => void;
@@ -68,6 +69,7 @@ export const usePhotosStore = create<PhotosState>((set, get) => ({
     })),
 
   clear: () => set({ photos: [], detections: {} }),
+  clearAllPhotos: () => set({ photos: [], detections: {} }),
   deletePhoto: (photoPath: string) =>
     set((state) => {
       const newDetections = { ...state.detections };
