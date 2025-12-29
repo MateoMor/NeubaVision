@@ -9,6 +9,7 @@ import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Colors } from "@/constants/theme";
 import { ImagesHeader } from "@/components/tab_images/ImagesHeader";
+import { CalculationSectionFooter } from "@/components/tab_images/CalculationSectionFooter";
 
 export default function ImagesScreen() {
   const colorScheme = useColorScheme();
@@ -42,6 +43,7 @@ export default function ImagesScreen() {
         deleteAcceptedPhotos={deleteAcceptedPhotos}
       />
       <FlatList
+        className="flex-1"
         onLayout={handleLayout}
         data={Object.entries(detections)}
         numColumns={COLUMNS}
@@ -77,8 +79,10 @@ export default function ImagesScreen() {
             )}
           </Pressable>
         )}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
       />
+
+      <CalculationSectionFooter />
 
       <ImageOptionsModal
         selectedImage={selectedImage}
