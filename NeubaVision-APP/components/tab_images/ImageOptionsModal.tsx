@@ -5,9 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useWindowDimensions } from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, Directions } from "react-native-gesture-handler";
 import { ZoomableContainer } from "../core/ZoomableContainer";
-import { Directions } from "react-native-gesture-handler";
 
 export function ImageOptionsModal({
   selectedImage,
@@ -99,6 +98,7 @@ export function ImageOptionsModal({
                   width={screenWidth}
                   height={screenWidth}
                   onFling={handleOnFling}
+                  resetId={currentPath}
                 >
                   <ImageWithBoundingBoxes
                     photoPath={currentPath}
