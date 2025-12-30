@@ -1,5 +1,5 @@
 import { View, Image } from "react-native";
-import { BoundingBoxOverlay } from "./BoundingBoxOverlay";
+import { BoundingBoxOverlay } from "../tab_images/BoundingBoxOverlay";
 import { BoundingBox } from "@/types/BoundingBox";
 
 export const ImageWithBoundingBoxes = ({

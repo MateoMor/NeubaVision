@@ -1,5 +1,5 @@
 import { View, Modal, Pressable, Text } from "react-native";
-import { ImageWithBoundingBoxes } from "./ImageWithBoundingBoxes";
+import { ImageWithBoundingBoxes } from "../core/ImageWithBoundingBoxes";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useWindowDimensions } from "react-native";

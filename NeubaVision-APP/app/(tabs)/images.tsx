@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FlatList, View, LayoutChangeEvent, Pressable, Text } from "react-native";
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ImageWithBoundingBoxes } from "@/components/tab_images/ImageWithBoundingBoxes";
+import { ImageWithBoundingBoxes } from "@/components/core/ImageWithBoundingBoxes";
 import { Ionicons } from "@expo/vector-icons";
 import { ImageOptionsModal } from "@/components/tab_images/ImageOptionsModal";
 import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
