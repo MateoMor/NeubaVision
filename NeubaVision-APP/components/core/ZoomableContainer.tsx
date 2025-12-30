@@ -5,15 +5,24 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-export function ZoomableContainer({
-  children,
-  width,
-  height,
-}: {
+interface ZoomableContainerProps {
   children: React.ReactNode;
+  /** The width of the container/image. Used to calculate translation boundaries. */
   width: number;
+  /** The height of the container/image. Used to calculate translation boundaries. */
   height: number;
-}) {
+}
+
+/**
+ * A container component that provides pinch-to-zoom and pan interactions.
+ * It restricts translation to Ensure the content stays within the view boundaries
+ * when zoomed in.
+ *
+ * @param props - The component props.
+ * @returns The zoomable container.
+ */
+export function ZoomableContainer({ children, width, height }: ZoomableContainerProps) {
+  // Shared values for animation state
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -21,25 +30,71 @@ export function ZoomableContainer({
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
+  /**
+   * Clamps a value between a minimum and maximum value.
+   * Worklet-safe for use in Reanimated callbacks.
+   */
+  const clamp = (val: number, min: number, max: number) => {
+    "worklet";
+    return Math.min(Math.max(val, min), max);
+  };
+
+  // Pinch gesture handler for zooming
   const pinch = Gesture.Pinch()
     .onUpdate((e) => {
       scale.value = savedScale.value * e.scale;
     })
     .onEnd(() => {
+      // If zoomed out beyond original size, bounce back
       if (scale.value < 1) {
         scale.value = withTiming(1);
         translateX.value = withTiming(0);
         translateY.value = withTiming(0);
+        savedScale.value = 1;
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else {
+        // Save current scale
+        savedScale.value = scale.value;
+        const maxTranslateX = (width * (scale.value - 1)) / 2;
+        const maxTranslateY = (height * (scale.value - 1)) / 2;
+
+        // Check if current position is out of bounds after zoom ends
+        if (
+          Math.abs(translateX.value) > maxTranslateX ||
+          Math.abs(translateY.value) > maxTranslateY
+        ) {
+          const newX = clamp(translateX.value, -maxTranslateX, maxTranslateX);
+          const newY = clamp(translateY.value, -maxTranslateY, maxTranslateY);
+          translateX.value = withTiming(newX);
+          translateY.value = withTiming(newY);
+          savedTranslateX.value = newX;
+          savedTranslateY.value = newY;
+        }
       }
-      savedScale.value = scale.value;
     });
 
+  // Pan gesture handler for moving the zoomed view
   const pan = Gesture.Pan()
     .averageTouches(true)
     .onUpdate((e) => {
+      // Only allow panning if zoomed in
       if (scale.value > 1) {
-        translateX.value = savedTranslateX.value + e.translationX;
-        translateY.value = savedTranslateY.value + e.translationY;
+        const maxTranslateX = (width * (scale.value - 1)) / 2;
+        const maxTranslateY = (height * (scale.value - 1)) / 2;
+
+        // Ensure translation doesn't go beyond the image bounds
+        //
+        translateX.value = clamp(
+          savedTranslateX.value + e.translationX,
+          -maxTranslateX,
+          maxTranslateX
+        );
+        translateY.value = clamp(
+          savedTranslateY.value + e.translationY,
+          -maxTranslateY,
+          maxTranslateY
+        );
       }
     })
     .onEnd(() => {
