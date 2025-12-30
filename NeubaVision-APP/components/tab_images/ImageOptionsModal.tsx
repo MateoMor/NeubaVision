@@ -7,6 +7,7 @@ import { usePhotosStore } from "@/store/usePhotosStore";
 import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ZoomableContainer } from "../core/ZoomableContainer";
+import { Directions } from "react-native-gesture-handler";
 
 export function ImageOptionsModal({
   selectedImage,
@@ -49,6 +50,27 @@ export function ImageOptionsModal({
 
   const isAccepted = currentData?.isAccepted || false;
 
+  const navigateToImage = (direction: Directions) => {
+    if (currentPath) {
+      const paths = Object.keys(detections);
+      const currentIndex = paths.indexOf(currentPath);
+      let nextIndex = 0;
+      if (direction === Directions.LEFT) {
+        nextIndex = currentIndex + 1;
+      } else if (direction === Directions.RIGHT) {
+        nextIndex = currentIndex - 1;
+      }
+      const nextPath = paths[nextIndex];
+      if (nextPath) {
+        setSelectedImage([nextPath, detections[nextPath]]);
+      }
+    }
+  };
+
+  const handleOnFling = (direction: Directions) => {
+    navigateToImage(direction);
+  };
+
   return (
     <Modal
       visible={!!selectedImage}
@@ -73,7 +95,11 @@ export function ImageOptionsModal({
             {/* Imagen Principal con Zoom */}
             <View className="flex-1 justify-center items-center overflow-hidden">
               {currentPath && currentData && (
-                <ZoomableContainer width={screenWidth} height={screenWidth}>
+                <ZoomableContainer
+                  width={screenWidth}
+                  height={screenWidth}
+                  onFling={handleOnFling}
+                >
                   <ImageWithBoundingBoxes
                     photoPath={currentPath}
                     boxes={currentData.boundingBoxes}

@@ -1,8 +1,10 @@
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useState } from "react";
+import { Gesture, GestureDetector, Directions } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  runOnJS,
 } from "react-native-reanimated";
 
 interface ZoomableContainerProps {
@@ -11,6 +13,10 @@ interface ZoomableContainerProps {
   width: number;
   /** The height of the container/image. Used to calculate translation boundaries. */
   height: number;
+  /** Function to be called when the user flings the container and it is not zoomed in. */
+  onFling?: (direction: Directions) => void;
+  /** Function to be called when the zoom scale changes. */
+  onZoomChange?: (isZoomed: boolean) => void;
 }
 
 /**
@@ -21,7 +27,13 @@ interface ZoomableContainerProps {
  * @param props - The component props.
  * @returns The zoomable container.
  */
-export function ZoomableContainer({ children, width, height }: ZoomableContainerProps) {
+export function ZoomableContainer({
+  children,
+  width,
+  height,
+  onFling,
+  onZoomChange,
+}: ZoomableContainerProps) {
   // Shared values for animation state
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -29,6 +41,18 @@ export function ZoomableContainer({ children, width, height }: ZoomableContainer
   const translateY = useSharedValue(0);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
+
+  const isZoomedShared = useSharedValue(false);
+
+  const updateZoomState = (zoomed: boolean) => {
+    "worklet";
+    if (zoomed !== isZoomedShared.value) {
+      isZoomedShared.value = zoomed;
+      if (onZoomChange) {
+        runOnJS(onZoomChange)(zoomed);
+      }
+    }
+  };
 
   /**
    * Clamps a value between a minimum and maximum value.
@@ -53,9 +77,11 @@ export function ZoomableContainer({ children, width, height }: ZoomableContainer
         savedScale.value = 1;
         savedTranslateX.value = 0;
         savedTranslateY.value = 0;
+        updateZoomState(false);
       } else {
         // Save current scale
         savedScale.value = scale.value;
+        updateZoomState(scale.value > 1.01);
         const maxTranslateX = (width * (scale.value - 1)) / 2;
         const maxTranslateY = (height * (scale.value - 1)) / 2;
 
@@ -71,6 +97,22 @@ export function ZoomableContainer({ children, width, height }: ZoomableContainer
           savedTranslateX.value = newX;
           savedTranslateY.value = newY;
         }
+      }
+    });
+
+  const flingLeft = Gesture.Fling()
+    .direction(Directions.LEFT)
+    .onEnd(() => {
+      if (scale.value <= 1.01 && onFling) {
+        runOnJS(onFling)(Directions.LEFT);
+      }
+    });
+
+  const flingRight = Gesture.Fling()
+    .direction(Directions.RIGHT)
+    .onEnd(() => {
+      if (scale.value <= 1.01 && onFling) {
+        runOnJS(onFling)(Directions.RIGHT);
       }
     });
 
@@ -102,7 +144,11 @@ export function ZoomableContainer({ children, width, height }: ZoomableContainer
       savedTranslateY.value = translateY.value;
     });
 
-  const composed = Gesture.Simultaneous(pinch, pan);
+  const composed = Gesture.Simultaneous(
+    pinch,
+    pan,
+    Gesture.Exclusive(flingLeft, flingRight)
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
