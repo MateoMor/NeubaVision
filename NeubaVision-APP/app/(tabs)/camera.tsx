@@ -10,6 +10,7 @@ import { FlashOverlay } from "@/components/tab_camera/FlashOverlay";
 import { DeviceNotFound } from "@/components/tab_camera/DeviceNotFound";
 import { InferenceStatusToast } from "@/components/tab_camera/InferenceStatusToast"; // Import Toast
 import { useLineDrawing } from "@/hooks/useLineDrawing";
+import { useYoloInference } from "@/hooks/useYoloInference";
 import { useCameraFlash } from "@/hooks/useCameraFlash";
 import { useTakePicture } from "@/hooks/useTakePicture";
 import { useImagePicker } from "@/hooks/useImagePicker";
@@ -36,8 +37,8 @@ const GRID_CONFIG = {
 
 export default function CameraScreen() {
   const { addPhoto, updatePhotoStatus, setDetections } = usePhotosStore();
-  const { model, loading, loadModel, runInference, setClassNames, inferenceState } =
-    useModelStore();
+  const { model, loading, loadModel, setClassNames, inferenceState } = useModelStore();
+  const { runInference } = useYoloInference();
   const { width, height } = useWindowDimensions();
 
   // Camera setup
