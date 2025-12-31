@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { Grid3x3, Images, Circle } from "lucide-react-native";
 import { CameraDevice } from "react-native-vision-camera";
+import { Colors } from "@/constants/theme";
 
 import { HStack } from "@/components/ui/hstack";
 import {
@@ -34,6 +35,7 @@ export const CameraControls = ({
 }: CameraControlsProps) => {
   const minZoom = device.minZoom ?? 1;
   const maxZoom = Math.min(device.maxZoom ?? 1, 10); // Cap at 10x
+  const colorScheme = Colors.light;
 
   return (
     <View className="absolute bottom-0 w-full px-8 items-center h-40 justify-evenly bg-[rgba(0,0,0,0.3)]">
@@ -47,21 +49,36 @@ export const CameraControls = ({
         className="w-1/2"
       >
         <SliderTrack>
-          <SliderFilledTrack />
+          <SliderFilledTrack style={{ backgroundColor: colorScheme.card }} />
         </SliderTrack>
-        <SliderThumb />
+        <SliderThumb style={{ backgroundColor: colorScheme.card }} />
       </Slider>
 
       {/* Action Buttons */}
       <HStack className="w-full px-12 justify-between items-center">
-        <Button onPress={onToggleGrid} size="xl" className="rounded-full">
-          <ButtonIcon as={Grid3x3} />
+        <Button
+          onPress={onToggleGrid}
+          size="xl"
+          className="rounded-full"
+          style={{ backgroundColor: colorScheme.card }}
+        >
+          <ButtonIcon as={Grid3x3} color={colorScheme.text} />
         </Button>
         <Button onPress={onTakePicture} variant="link" size="xl" className="p-0">
-          <ButtonIcon as={Circle} size="xl" className="w-20 h-20 text-white" />
+          <ButtonIcon
+            as={Circle}
+            size="xl"
+            className="w-20 h-20"
+            color={colorScheme.card}
+          />
         </Button>
-        <Button onPress={onPickImage} size="xl" className="rounded-full">
-          <ButtonIcon as={Images} />
+        <Button
+          onPress={onPickImage}
+          size="xl"
+          className="rounded-full"
+          style={{ backgroundColor: colorScheme.card }}
+        >
+          <ButtonIcon as={Images} color={colorScheme.text} />
         </Button>
       </HStack>
     </View>
