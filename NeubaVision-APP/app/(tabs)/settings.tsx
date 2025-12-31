@@ -122,30 +122,6 @@ export default function SettingsScreen() {
             />
           </ConfigSection>
 
-          <ConfigSection title="Configuración del Modelo">
-            <ConfigSlider
-              label="Sensibilidad"
-              value={confidenceThreshold}
-              onValueChange={setConfidenceThreshold}
-              minimumValue={0.1}
-              maximumValue={0.9}
-              step={0.05}
-              valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-              description="Umbral de confianza para detecciones. Mayor = más estricto"
-            />
-            <ConfigSlider
-              label="Supresión de duplicados (IOU)"
-              value={iouThreshold}
-              onValueChange={setIouThreshold}
-              minimumValue={0.1}
-              maximumValue={0.9}
-              step={0.05}
-              valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-              description="Umbral para eliminar detecciones duplicadas"
-              showDivider={false}
-            />
-          </ConfigSection>
-
           <ConfigSection title="Párametros de medición">
             <ConfigInput
               label="Factor de dilución"
@@ -184,6 +160,30 @@ export default function SettingsScreen() {
               keyboardType="numeric"
               unit="mm"
               placeholder="0.1"
+              showDivider={false}
+            />
+          </ConfigSection>
+
+          <ConfigSection title="Configuración del Modelo">
+            <ConfigSlider
+              label="Sensibilidad"
+              value={confidenceThreshold}
+              onValueChange={setConfidenceThreshold}
+              minimumValue={0.1}
+              maximumValue={0.9}
+              step={0.05}
+              valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+              description="Umbral de confianza para detecciones. Mayor = más estricto"
+            />
+            <ConfigSlider
+              label="Supresión de duplicados (IOU)"
+              value={iouThreshold}
+              onValueChange={setIouThreshold}
+              minimumValue={0.1}
+              maximumValue={0.9}
+              step={0.05}
+              valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+              description="Umbral para eliminar detecciones duplicadas"
               showDivider={false}
             />
           </ConfigSection>
