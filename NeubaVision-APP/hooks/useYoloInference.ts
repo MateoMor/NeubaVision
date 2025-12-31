@@ -4,6 +4,7 @@ import { usePhotosStore } from '@/store/usePhotosStore';
 import { preprocessImageForYOLO } from '@/utils/inference/imagePreprocessing';
 import { postprocessYOLOOutput } from '@/utils/inference/yoloPostprocessing';
 import { BoundingBox } from '@/types/BoundingBox';
+import { useAppSettingsStore } from '@/store/useAppSettingsStore';
 
 // Private variable to manage the sequential execution of inferences
 let inferenceQueue = Promise.resolve() as Promise<any>;
@@ -11,6 +12,7 @@ let inferenceQueue = Promise.resolve() as Promise<any>;
 export const useYoloInference = () => {
   const { model, classNames, setInferenceState } = useModelStore();
   const { updatePhotoStatus } = usePhotosStore();
+  const { confidenceThreshold, iouThreshold } = useAppSettingsStore();
 
   const runInference = useCallback(async (imagePath: string): Promise<BoundingBox[]> => {
     // Append the new inference task to the existing queue
@@ -52,8 +54,8 @@ export const useYoloInference = () => {
           {
             numPredictions: 8400,
             imgSize: 640,
-            confidenceThreshold: 0.25,
-            iouThreshold: 0.45,
+            confidenceThreshold,
+            iouThreshold,
           }
         );
         deltatime = new Date().getTime() - deltatime;
