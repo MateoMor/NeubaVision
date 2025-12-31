@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 
 interface HeaderProps {
   title?: string;
@@ -11,27 +10,23 @@ interface HeaderProps {
 }
 
 export function Header({ title, leftContent, centerContent, rightContent }: HeaderProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? "light"];
-  const isDark = colorScheme === "dark";
+  const backgroundColor = useThemeColor({}, "background");
+  const borderColor = useThemeColor({}, "border");
+  const textColor = useThemeColor({}, "text");
 
   return (
     <View
       className="flex-row items-center px-4 py-3 border-b"
       style={{
-        backgroundColor: themeColors.background,
-        borderBottomColor: isDark ? "#2A2A2A" : "#F0F0F0",
+        backgroundColor: backgroundColor,
+        borderBottomColor: borderColor,
       }}
     >
       <View className="flex-1 justify-center">
         {leftContent
           ? leftContent
           : title && (
-              <Text
-                className={`font-semibold text-lg ${
-                  isDark ? "text-white" : "text-zinc-900"
-                }`}
-              >
+              <Text className="font-semibold text-lg" style={{ color: textColor }}>
                 {title}
               </Text>
             )}

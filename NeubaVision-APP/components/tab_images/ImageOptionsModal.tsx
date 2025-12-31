@@ -1,4 +1,5 @@
 import { View, Modal, Pressable, Text } from "react-native";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 import { ImageWithBoundingBoxes } from "../core/ImageWithBoundingBoxes";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,6 +19,14 @@ export function ImageOptionsModal({
   const { width: screenWidth } = useWindowDimensions();
   const { deletePhoto, detections, updateUserCorrection, toggleAccepted } =
     usePhotosStore();
+
+  const overlayColor = useThemeColor({}, "overlay");
+  const cardColor = useThemeColor({}, "card");
+  const textColor = useThemeColor({}, "text");
+  const tintColor = useThemeColor({}, "tint");
+  const iconColor = useThemeColor({}, "icon");
+  const inputBgColor = useThemeColor({}, "inputBackground");
+  const borderColor = useThemeColor({}, "border");
 
   const currentPath = selectedImage?.[0];
   const currentData = currentPath ? detections[currentPath] : null;
@@ -78,16 +87,15 @@ export function ImageOptionsModal({
       onRequestClose={() => setSelectedImage(null)}
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View className="flex-1 bg-black/95">
+        <View className="flex-1" style={{ backgroundColor: overlayColor }}>
           <SafeAreaView className="flex-1">
             <View className="flex-row justify-between items-center p-4">
-              <Pressable
-                onPress={() => setSelectedImage(null)}
-                className="p-2 bg-zinc-800/50 rounded-full"
-              >
-                <Ionicons name="close" size={24} color="white" />
+              <Pressable onPress={() => setSelectedImage(null)} className="rounded-full">
+                <Ionicons name="close" size={24} color={textColor} />
               </Pressable>
-              <Text className="text-white font-bold text-lg">Análisis</Text>
+              <Text className="font-bold text-xl" style={{ color: textColor }}>
+                Análisis
+              </Text>
               <View className="w-10" />
             </View>
 
@@ -110,43 +118,65 @@ export function ImageOptionsModal({
             </View>
 
             {/* Panel de Estadísticas y Controles */}
-            <View className="p-8 bg-zinc-900 rounded-t-[40px] shadow-2xl">
-              <View className="w-12 h-1 bg-zinc-700 rounded-full mb-8 self-center" />
+            <View
+              className="p-8 rounded-t-[40px] shadow-2xl"
+              style={{ backgroundColor: cardColor }}
+            >
+              <View
+                className="w-12 h-1 rounded-full mb-8 self-center"
+                style={{ backgroundColor: borderColor }}
+              />
 
               <View className="flex-row justify-between items-end mb-8">
                 {/* IA Count */}
                 <View className="items-center flex-1">
-                  <Text className="text-zinc-500 text-[10px] font-bold uppercase tracking-tighter mb-1">
+                  <Text
+                    className="text-[10px] font-bold uppercase tracking-tighter mb-1"
+                    style={{ color: iconColor }}
+                  >
                     Detectados
                   </Text>
-                  <View className="bg-zinc-800/50 px-3 py-1 rounded-lg border border-zinc-700/50">
-                    <Text className="text-zinc-300 text-2xl font-bold">
+                  <View
+                    className="px-3 py-1 rounded-lg border"
+                    style={{ backgroundColor: inputBgColor, borderColor: borderColor }}
+                  >
+                    <Text className="text-2xl font-bold" style={{ color: textColor }}>
                       {detectedCount}
                     </Text>
                   </View>
                 </View>
 
-                {/* Total Count (Enfocado) */}
                 <View className="items-center flex-1">
-                  <Text className="text-zinc-400 text-xs font-black uppercase tracking-widest mb-2">
+                  <Text
+                    className="text-xs font-black uppercase tracking-widest mb-2"
+                    style={{ color: tintColor }}
+                  >
                     Total
                   </Text>
-                  <Text className="text-white text-5xl font-black tabular-nums leading-none">
+                  <Text
+                    className="text-5xl font-black tabular-nums leading-none"
+                    style={{ color: textColor }}
+                  >
                     {totalCount}
                   </Text>
                 </View>
 
-                {/* Correction Count */}
                 <View className="items-center flex-1">
-                  <Text className="text-zinc-500 text-[10px] font-bold uppercase tracking-tighter mb-1">
+                  <Text
+                    className="text-[10px] font-bold uppercase tracking-tighter mb-1"
+                    style={{ color: iconColor }}
+                  >
                     Ajuste Manual
                   </Text>
                   <View
                     className={`px-3 py-1 rounded-lg border ${
-                      userCorrection !== 0
-                        ? "bg-amber-900/20 border-amber-500/30"
-                        : "bg-zinc-800/50 border-zinc-700/50"
+                      userCorrection !== 0 ? "bg-amber-900/20 border-amber-500/30" : ""
                     }`}
+                    style={
+                      userCorrection === 0
+                        ? { backgroundColor: inputBgColor, borderColor: borderColor }
+                        : {}
+                    }
                   >
                     <Text
                       className={`text-2xl font-bold ${
@@ -154,8 +184,9 @@ export function ImageOptionsModal({
                           ? "text-green-400"
                           : userCorrection < 0
                           ? "text-red-400"
-                          : "text-zinc-300"
+                          : ""
                       }`}
+                      style={userCorrection === 0 ? { color: textColor } : {}}
                     >
                       {userCorrection > 0 ? `+${userCorrection}` : userCorrection}
                     </Text>
@@ -167,16 +198,18 @@ export function ImageOptionsModal({
               <View className="flex-row justify-center gap-4 mb-8">
                 <Pressable
                   onPress={() => handleUpdateCount(-1)}
-                  className="flex-1 h-14 bg-zinc-800 border border-zinc-700 rounded-2xl items-center justify-center active:bg-zinc-700"
+                  className="flex-1 h-14 border rounded-2xl items-center justify-center active:opacity-80"
+                  style={{ backgroundColor: inputBgColor, borderColor: borderColor }}
                 >
-                  <Ionicons name="remove" size={28} color="white" />
+                  <Ionicons name="remove" size={28} color={textColor} />
                 </Pressable>
 
                 <Pressable
                   onPress={() => handleUpdateCount(1)}
-                  className="flex-1 h-14 bg-zinc-800 border border-zinc-700 rounded-2xl items-center justify-center active:bg-zinc-700"
+                  className="flex-1 h-14 border rounded-2xl items-center justify-center active:opacity-80"
+                  style={{ backgroundColor: inputBgColor, borderColor: borderColor }}
                 >
-                  <Ionicons name="add" size={28} color="white" />
+                  <Ionicons name="add" size={28} color={textColor} />
                 </Pressable>
               </View>
 

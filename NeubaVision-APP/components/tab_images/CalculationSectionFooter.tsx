@@ -5,7 +5,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 
 import { useNeubauerCalculationsStore } from "@/store/useNeubauerCalculationsStore";
 import { usePhotosStore } from "@/store/usePhotosStore";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/hooks/theme/useColorScheme";
 import { Colors } from "@/constants/theme";
 import { formatScientific } from "@/utils/calculation/formatScientific";
 import { verticalPan } from "@/utils/animations/verticalPan";

@@ -1,6 +1,6 @@
 import { View, ScrollView, Alert } from "react-native";
 import React, { useState } from "react";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/hooks/theme/useColorScheme";
 import { Colors } from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsHeader } from "@/components/tab_settings/SettingsHeader";

@@ -1,8 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import Slider from "@react-native-community/slider";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 
 interface ConfigSliderProps {
   label: string;
@@ -29,20 +28,20 @@ export function ConfigSlider({
   description,
   showDivider = true,
 }: ConfigSliderProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? "light"];
-  const isDark = colorScheme === "dark";
+  const textColor = useThemeColor({}, "text");
+  const tintColor = useThemeColor({}, "tint");
+  const borderColor = useThemeColor({}, "border");
 
   return (
     <>
       <View className="px-4 py-3">
         {/* Label and Value */}
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-base" style={{ color: themeColors.text }}>
+          <Text className="text-base" style={{ color: textColor }}>
             {label}
           </Text>
           {showValue && (
-            <Text className="text-base font-semibold" style={{ color: themeColors.tint }}>
+            <Text className="text-base font-semibold" style={{ color: tintColor }}>
               {valueFormatter(value)}
             </Text>
           )}
@@ -55,23 +54,20 @@ export function ConfigSlider({
           minimumValue={minimumValue}
           maximumValue={maximumValue}
           step={step}
-          minimumTrackTintColor={themeColors.tint}
-          maximumTrackTintColor={isDark ? "#2C2C2E" : "#E5E5EA"}
-          thumbTintColor={themeColors.tint}
+          minimumTrackTintColor={tintColor}
+          maximumTrackTintColor={borderColor}
+          thumbTintColor={tintColor}
         />
 
         {/* Description */}
         {description && (
-          <Text className="text-xs mt-1 opacity-60" style={{ color: themeColors.text }}>
+          <Text className="text-xs mt-1 opacity-60" style={{ color: textColor }}>
             {description}
           </Text>
         )}
       </View>
       {showDivider && (
-        <View
-          className="h-[0.5px] ml-4"
-          style={{ backgroundColor: isDark ? "#2A2A2A" : "#E5E5EA" }}
-        />
+        <View className="h-[0.5px] ml-4" style={{ backgroundColor: borderColor }} />
       )}
     </>
   );

@@ -6,7 +6,7 @@ import { ImageWithBoundingBoxes } from "@/components/core/ImageWithBoundingBoxes
 import { Ionicons } from "@expo/vector-icons";
 import { ImageOptionsModal } from "@/components/tab_images/ImageOptionsModal";
 import { ProcessedPhotoData } from "@/types/ProcessedPhotoData";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/hooks/theme/useColorScheme";
 import { Colors } from "@/constants/theme";
 import { ImagesHeader } from "@/components/tab_images/ImagesHeader";
 import { CalculationSectionFooter } from "@/components/tab_images/CalculationSectionFooter";

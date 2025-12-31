@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 import { Header } from "@/components/shared/Header";
 
 export function ImagesHeader({
@@ -13,16 +13,14 @@ export function ImagesHeader({
   acceptedCount: number;
   deleteAcceptedPhotos: () => void;
 }) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const textColor = useThemeColor({}, "text");
+  const dangerBg = useThemeColor({}, "dangerBackground");
 
   return (
     <Header
       title={title}
       centerContent={
-        <Text
-          className={`font-bold text-2xl ${isDark ? "text-zinc-300" : "text-zinc-800"}`}
-        >
+        <Text className="font-bold text-2xl" style={{ color: textColor }}>
           {acceptedCount}
         </Text>
       }
@@ -30,9 +28,8 @@ export function ImagesHeader({
         acceptedCount > 0 && (
           <Pressable
             onPress={deleteAcceptedPhotos}
-            className={`p-1 rounded-full active:opacity-70 ${
-              isDark ? "bg-red-500/10" : "bg-red-50"
-            }`}
+            className="p-1 rounded-full active:opacity-70"
+            style={{ backgroundColor: dangerBg }}
           >
             <Ionicons name="trash" size={20} color="#ef4444" />
           </Pressable>

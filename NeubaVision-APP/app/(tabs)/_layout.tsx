@@ -3,7 +3,7 @@ import React from "react";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/hooks/theme/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

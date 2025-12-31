@@ -1,9 +1,9 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useColorScheme } from "@/hooks/theme/useColorScheme";
 
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
@@ -16,10 +16,14 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const segments = useSegments() as string[];
+  const isDark = colorScheme === "dark";
+
+  const isCamera = segments.includes("camera");
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GluestackUIProvider mode="dark">
+      <GluestackUIProvider mode={isDark ? "dark" : "light"}>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -28,7 +32,7 @@ export default function RootLayout() {
               options={{ presentation: "modal", title: "Modal" }}
             />
           </Stack>
-          <StatusBar style="auto" />
+          <StatusBar style={isCamera ? "light" : isDark ? "light" : "dark"} />
         </ThemeProvider>
       </GluestackUIProvider>
     </GestureHandlerRootView>

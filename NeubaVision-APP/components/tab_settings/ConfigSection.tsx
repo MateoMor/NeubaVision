@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 
 interface ConfigSectionProps {
   title: string;
@@ -9,15 +8,15 @@ interface ConfigSectionProps {
 }
 
 export function ConfigSection({ title, children }: ConfigSectionProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? "light"];
-  const isDark = colorScheme === "dark";
+  const textColor = useThemeColor({}, "text");
+  const cardColor = useThemeColor({}, "card");
+  const borderColor = useThemeColor({}, "border");
 
   return (
     <View className="mb-6">
       {/* Section Header */}
       <View className="flex-row items-center mb-3 px-1">
-        <Text className="text-base font-semibold" style={{ color: themeColors.text }}>
+        <Text className="text-base font-semibold" style={{ color: textColor }}>
           {title}
         </Text>
       </View>
@@ -26,9 +25,9 @@ export function ConfigSection({ title, children }: ConfigSectionProps) {
       <View
         className="rounded-xl overflow-hidden"
         style={{
-          backgroundColor: isDark ? "#1C1C1E" : "#FFFFFF",
+          backgroundColor: cardColor,
           borderWidth: 1,
-          borderColor: isDark ? "#2A2A2A" : "#E5E5EA",
+          borderColor: borderColor,
         }}
       >
         {children}

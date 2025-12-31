@@ -1,8 +1,7 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 
 interface ConfigButtonProps {
   label: string;
@@ -21,11 +20,12 @@ export function ConfigButton({
   destructive = false,
   showDivider = true,
 }: ConfigButtonProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? "light"];
-  const isDark = colorScheme === "dark";
+  const textColor = useThemeColor({}, "text");
+  const tintColor = useThemeColor({}, "tint");
+  const dangerColor = useThemeColor({}, "danger");
+  const borderColor = useThemeColor({}, "border");
 
-  const color = destructive ? "#FF3B30" : iconColor || themeColors.tint;
+  const color = destructive ? dangerColor : iconColor || tintColor;
 
   return (
     <>
@@ -35,17 +35,14 @@ export function ConfigButton({
       >
         <Text
           className="text-base flex-1"
-          style={{ color: destructive ? "#FF3B30" : themeColors.text }}
+          style={{ color: destructive ? dangerColor : textColor }}
         >
           {label}
         </Text>
         {icon && <Ionicons name={icon} size={20} color={color} />}
       </Pressable>
       {showDivider && (
-        <View
-          className="h-[0.5px] ml-4"
-          style={{ backgroundColor: isDark ? "#2A2A2A" : "#E5E5EA" }}
-        />
+        <View className="h-[0.5px] ml-4" style={{ backgroundColor: borderColor }} />
       )}
     </>
   );

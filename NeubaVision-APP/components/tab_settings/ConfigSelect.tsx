@@ -1,6 +1,5 @@
 import { View, Text } from "react-native";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 import {
   Select,
   SelectTrigger,
@@ -30,16 +29,17 @@ export function ConfigSelect({
   showDivider = true,
   description,
 }: ConfigSelectProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? "light"];
-  const isDark = colorScheme === "dark";
+  const textColor = useThemeColor({}, "text");
+  const inputBgColor = useThemeColor({}, "inputBackground");
+  const tintColor = useThemeColor({}, "tint");
+  const borderColor = useThemeColor({}, "border");
 
   return (
     <>
       <View className="px-4 py-3">
         {/* Label and Select Row */}
         <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-base font-medium" style={{ color: themeColors.text }}>
+          <Text className="text-base font-medium" style={{ color: textColor }}>
             {label}
           </Text>
 
@@ -47,7 +47,7 @@ export function ConfigSelect({
           <View
             className="rounded-lg overflow-hidden"
             style={{
-              backgroundColor: isDark ? "#2C2C2E" : "#F2F2F7",
+              backgroundColor: inputBgColor,
             }}
           >
             <Select selectedValue={value} onValueChange={onValueChange}>
@@ -62,7 +62,7 @@ export function ConfigSelect({
                 <SelectInput
                   className="text-sm font-medium"
                   style={{
-                    color: themeColors.tint,
+                    color: tintColor,
                   }}
                 />
                 <SelectIcon className="ml-1">
@@ -86,7 +86,7 @@ export function ConfigSelect({
           <Text
             className="text-xs mt-1 leading-4"
             style={{
-              color: themeColors.text,
+              color: textColor,
               opacity: 0.6,
             }}
           >
@@ -97,10 +97,7 @@ export function ConfigSelect({
 
       {/* Divider */}
       {showDivider && (
-        <View
-          className="h-[0.5px] ml-4"
-          style={{ backgroundColor: isDark ? "#2A2A2A" : "#E5E5EA" }}
-        />
+        <View className="h-[0.5px] ml-4" style={{ backgroundColor: borderColor }} />
       )}
     </>
   );

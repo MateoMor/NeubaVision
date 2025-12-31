@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TextInput } from "react-native";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 
 interface ConfigInputProps {
   label: string;
@@ -24,42 +23,40 @@ export function ConfigInput({
   unit,
   showDivider = true,
 }: ConfigInputProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = Colors[colorScheme ?? "light"];
-  const isDark = colorScheme === "dark";
+  const textColor = useThemeColor({}, "text");
+  const inputBgColor = useThemeColor({}, "inputBackground");
+  const placeholderColor = useThemeColor({}, "placeholder");
+  const borderColor = useThemeColor({}, "border");
 
   return (
     <>
       <View className="flex-row items-center justify-between px-4 py-3">
-        <Text className="flex-1 text-base" style={{ color: themeColors.text }}>
+        <Text className="flex-1 text-base" style={{ color: textColor }}>
           {label}
         </Text>
         <View className="flex-row items-center gap-2">
           <TextInput
             className="text-base text-right px-3 py-1.5 rounded-lg min-w-[80px]"
             style={{
-              color: themeColors.text,
-              backgroundColor: isDark ? "#2C2C2E" : "#F2F2F7",
+              color: textColor,
+              backgroundColor: inputBgColor,
             }}
             value={value}
             onChangeText={onChangeText}
             onBlur={onBlur}
             placeholder={placeholder}
-            placeholderTextColor={isDark ? "#8E8E93" : "#C7C7CC"}
+            placeholderTextColor={placeholderColor}
             keyboardType={keyboardType}
           />
           {unit && (
-            <Text className="text-sm opacity-60" style={{ color: themeColors.text }}>
+            <Text className="text-sm opacity-60" style={{ color: textColor }}>
               {unit}
             </Text>
           )}
         </View>
       </View>
       {showDivider && (
-        <View
-          className="h-[0.5px] ml-4"
-          style={{ backgroundColor: isDark ? "#2A2A2A" : "#E5E5EA" }}
-        />
+        <View className="h-[0.5px] ml-4" style={{ backgroundColor: borderColor }} />
       )}
     </>
   );
