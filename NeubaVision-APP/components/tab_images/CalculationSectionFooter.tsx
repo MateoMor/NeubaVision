@@ -130,10 +130,10 @@ export const CalculationSectionFooter = () => {
                 {t("calculator.concentration")}
               </Text>
               <View className="items-end">
-                <Text className="text-2xl font-bold text-blue-500">
+                <Text className="text-2xl font-bold" style={{ color: themeColors.tint }}>
                   {formatScientific(cellsPerMilliliter)}
                 </Text>
-                <Text className="text-xs text-gray-500">
+                <Text className="text-xs" style={{ color: themeColors.text }}>
                   {t("calculator.cells_per_ml")}
                 </Text>
               </View>
