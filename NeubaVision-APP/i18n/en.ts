@@ -101,7 +101,7 @@ export const en = {
     languages: {
       es: "Spanish",
       en: "English",
-      auto: "Automatic (System)",
+      auto: "System",
     },
   },
 };

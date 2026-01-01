@@ -101,7 +101,7 @@
     languages: {
       es: "Español",
       en: "Inglés",
-      auto: "Automático (Sistema)",
+      auto: "Sistema",
     },
   },
 };

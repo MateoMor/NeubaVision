@@ -105,7 +105,13 @@ export default function SettingsScreen() {
           <ConfigSection title={t("settings.appearance")}>
             <ConfigSelect
               label={t("settings.language")}
-              value={language}
+              value={
+                language === "auto"
+                  ? t("languages.auto")
+                  : language === "es"
+                  ? t("languages.es")
+                  : t("languages.en")
+              }
               onValueChange={(val) => setLanguage(val as any)}
               options={[
                 { label: t("languages.auto"), value: "auto" },
@@ -115,7 +121,11 @@ export default function SettingsScreen() {
             />
             <ConfigSelect
               label={t("settings.theme.label")}
-              value={themeMode}
+              value={
+                themeMode != "auto"
+                  ? themeMode.charAt(0).toUpperCase() + themeMode.slice(1)
+                  : t("settings.theme.auto")
+              }
               onValueChange={(val) => setThemeMode(val as any)}
               options={[
                 { label: t("settings.theme.auto"), value: "auto" },

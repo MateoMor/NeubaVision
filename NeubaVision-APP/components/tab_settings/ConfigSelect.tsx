@@ -1,4 +1,5 @@
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useThemeColor } from "@/hooks/theme/useThemeColor";
 import {
   Select,
@@ -15,7 +16,7 @@ import { ChevronDownIcon } from "@/components/ui/icon";
 interface ConfigSelectProps {
   label: string;
   value: string;
-  options: (string | { label: string; value: string })[];
+  options: { label: string; value: string }[];
   onValueChange: (value: string) => void;
   showDivider?: boolean;
   description?: string;
@@ -29,6 +30,7 @@ export function ConfigSelect({
   showDivider = true,
   description,
 }: ConfigSelectProps) {
+  const { i18n } = useTranslation();
   const textColor = useThemeColor({}, "text");
   const inputBgColor = useThemeColor({}, "inputBackground");
   const tintColor = useThemeColor({}, "tint");
@@ -50,7 +52,11 @@ export function ConfigSelect({
               backgroundColor: inputBgColor,
             }}
           >
-            <Select selectedValue={value} onValueChange={onValueChange}>
+            <Select
+              key={i18n.language}
+              selectedValue={value}
+              onValueChange={onValueChange}
+            >
               <SelectTrigger
                 className="min-w-[130px] border-0"
                 style={{
@@ -73,10 +79,8 @@ export function ConfigSelect({
                 <SelectBackdrop />
                 <SelectContent>
                   {options.map((option, i) => {
-                    const optionLabel =
-                      typeof option === "string" ? option : option.label;
-                    const optionValue =
-                      typeof option === "string" ? option : option.value;
+                    const optionLabel = option.label;
+                    const optionValue = option.value;
                     return <SelectItem key={i} label={optionLabel} value={optionValue} />;
                   })}
                 </SelectContent>
