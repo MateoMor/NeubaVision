@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useModelStore } from "@/store/useModelStore";
 
 export const LoadModelStatusToast = () => {
+  const { t } = useTranslation();
   const { loading, model } = useModelStore();
   const [isVisible, setIsVisible] = useState(true);
-  const [statusText, setStatusText] = useState("Cargando IA...");
+  const [statusText, setStatusText] = useState(t("model.loading"));
 
   useEffect(() => {
     if (loading) {
-      setStatusText("Cargando IA...");
+      setStatusText(t("model.loading"));
     } else if (model) {
-      setStatusText("IA lista");
+      setStatusText(t("model.ready"));
 
       // wait 1 second and close
       const timer = setTimeout(() => {
@@ -28,7 +30,7 @@ export const LoadModelStatusToast = () => {
       <View className="flex-row justify-between items-center">
         <Text
           className={`${
-            statusText === "IA lista" ? "text-green-400" : "text-amber-400"
+            statusText === t("model.ready") ? "text-green-400" : "text-amber-400"
           } font-bold text-sm`}
         >
           {statusText}

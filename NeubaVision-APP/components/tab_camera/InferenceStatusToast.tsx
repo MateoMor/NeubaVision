@@ -1,12 +1,13 @@
 import React, { useEffect } from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { usePhotosStore } from "@/store/usePhotosStore";
-import Animated, { 
-  FadeInUp, 
-  FadeOutUp, 
+import Animated, {
+  FadeInUp,
+  FadeOutUp,
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
 import { configureReanimatedLogger } from "react-native-reanimated";
 import { ProcessingStatus } from "@/types/ProcessingStatus";
@@ -64,6 +65,7 @@ const ProgressBar = ({ status }: { status: ProcessingStatus }) => {
 };
 
 export const InferenceStatusToast = () => {
+  const { t } = useTranslation();
   const photos = usePhotosStore((state) => state.photos);
 
   // Get photos that are currently being processed or in queue
@@ -83,10 +85,8 @@ export const InferenceStatusToast = () => {
     >
       <Text className="text-white font-bold mb-3 text-sm">
         {activePhotos.some((p) => p.status !== "queued")
-          ? `Procesando ${activePhotos.length} imagen${
-              activePhotos.length > 1 ? "es" : ""
-            }`
-          : "Imágenes en cola"}
+          ? t("inference.processing", { count: activePhotos.length })
+          : t("inference.queued")}
       </Text>
 
       <View className="gap-y-3">
@@ -94,7 +94,7 @@ export const InferenceStatusToast = () => {
           <View key={photo.path + index} className="flex-col gap-1">
             <View className="flex-row justify-between mb-1">
               <Text className="text-zinc-400 text-xs truncate max-w-[80%]">
-                Imagen {photos.length - photos.indexOf(photo)}
+                {t("inference.image_label")} {photos.length - photos.indexOf(photo)}
               </Text>
               <Text
                 className={`${
@@ -102,14 +102,14 @@ export const InferenceStatusToast = () => {
                 } text-xs font-medium`}
               >
                 {photo.status === "pending" || photo.status === "queued"
-                  ? "En espera"
+                  ? t("inference.status.waiting")
                   : photo.status === "preprocessing"
-                  ? "Preparando..."
+                  ? t("inference.status.preparing")
                   : photo.status === "inference"
-                  ? "Analizando..."
+                  ? t("inference.status.analyzing")
                   : photo.status === "postprocessing"
-                  ? "Finalizando..."
-                  : "Listo"}
+                  ? t("inference.status.finishing")
+                  : t("inference.status.ready")}
               </Text>
             </View>
             <ProgressBar status={photo.status} />

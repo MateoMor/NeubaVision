@@ -1,4 +1,5 @@
 import { View, Modal, Pressable, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useThemeColor } from "@/hooks/theme/useThemeColor";
 import { ImageWithBoundingBoxes } from "../core/ImageWithBoundingBoxes";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ export function ImageOptionsModal({
   selectedImage: [string, ProcessedPhotoData] | null;
   setSelectedImage: (image: [string, ProcessedPhotoData] | null) => void;
 }) {
+  const { t } = useTranslation();
   const { width: screenWidth } = useWindowDimensions();
   const { deletePhoto, detections, updateUserCorrection, toggleAccepted } =
     usePhotosStore();
@@ -94,7 +96,7 @@ export function ImageOptionsModal({
                 <Ionicons name="close" size={24} color={textColor} />
               </Pressable>
               <Text className="font-bold text-xl" style={{ color: textColor }}>
-                Análisis
+                {t("images.analysis_title")}
               </Text>
               <View className="w-10" />
             </View>
@@ -134,7 +136,7 @@ export function ImageOptionsModal({
                     className="text-[10px] font-bold uppercase tracking-tighter mb-1"
                     style={{ color: iconColor }}
                   >
-                    Detectados
+                    {t("images.detected")}
                   </Text>
                   <View
                     className="px-3 py-1 rounded-lg border"
@@ -151,7 +153,7 @@ export function ImageOptionsModal({
                     className="text-xs font-black uppercase tracking-widest mb-2"
                     style={{ color: tintColor }}
                   >
-                    Total
+                    {t("images.total")}
                   </Text>
                   <Text
                     className="text-5xl font-black tabular-nums leading-none"
@@ -166,7 +168,7 @@ export function ImageOptionsModal({
                     className="text-[10px] font-bold uppercase tracking-tighter mb-1"
                     style={{ color: iconColor }}
                   >
-                    Ajuste Manual
+                    {t("images.manual_adjustment")}
                   </Text>
                   <View
                     className={`px-3 py-1 rounded-lg border ${
@@ -227,12 +229,8 @@ export function ImageOptionsModal({
                     size={20}
                     color={isAccepted ? "#22c55e" : "white"}
                   />
-                  <Text
-                    className={`font-bold text-lg ml-2 ${
-                      isAccepted ? "text-green-500" : "text-white"
-                    }`}
-                  >
-                    {isAccepted ? "Aceptada" : "Confirmar"}
+                  <Text className="text-lg font-bold" style={{ color: textColor }}>
+                    {isAccepted ? t("images.accepted") : t("images.confirm")}
                   </Text>
                 </Pressable>
 

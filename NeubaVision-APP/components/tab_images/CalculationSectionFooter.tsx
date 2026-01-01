@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 import Animated, { useSharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 
@@ -13,6 +14,7 @@ import { ResultRow } from "./ResultRow";
 import { DividerLine } from "./DividerLine";
 
 export const CalculationSectionFooter = () => {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const themeColors = Colors[colorScheme ?? "light"];
@@ -87,18 +89,18 @@ export const CalculationSectionFooter = () => {
 
         <View className="px-4 pb-6 pt-2">
           <Text className="text-xl font-bold mb-4" style={{ color: themeColors.text }}>
-            Cálculo de Células
+            {t("calculator.title")}
           </Text>
 
           {/* Results */}
           <View className="gap-2">
             <ResultRow
-              label="Factor de dilución"
+              label={t("settings.dilution_factor.label")}
               value={dilutionFactor.toString()}
               themeColors={themeColors}
             />
             <ResultRow
-              label="Dimensión de la imágen mm³"
+              label={t("calculator.image_dimensions")}
               value={width + " x " + height + " x " + depth}
               themeColors={themeColors}
             />
@@ -106,17 +108,17 @@ export const CalculationSectionFooter = () => {
             <DividerLine />
 
             <ResultRow
-              label="Número de imágenes"
+              label={t("calculator.num_images")}
               value={nSquares.toString()}
               themeColors={themeColors}
             />
             <ResultRow
-              label="Total de células"
+              label={t("calculator.total_cells")}
               value={totalCells.toString()}
               themeColors={themeColors}
             />
             <ResultRow
-              label="Promedio / imagen"
+              label={t("calculator.average_per_image")}
               value={cellsPerSquare.toFixed(2)}
               themeColors={themeColors}
             />
@@ -125,13 +127,15 @@ export const CalculationSectionFooter = () => {
 
             <View className="flex-row justify-between items-center">
               <Text className="text-lg font-semibold" style={{ color: themeColors.text }}>
-                Concentración
+                {t("calculator.concentration")}
               </Text>
               <View className="items-end">
                 <Text className="text-2xl font-bold text-blue-500">
                   {formatScientific(cellsPerMilliliter)}
                 </Text>
-                <Text className="text-xs text-gray-500">células / mL</Text>
+                <Text className="text-xs text-gray-500">
+                  {t("calculator.cells_per_ml")}
+                </Text>
               </View>
             </View>
           </View>

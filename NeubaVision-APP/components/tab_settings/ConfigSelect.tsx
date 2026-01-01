@@ -15,7 +15,7 @@ import { ChevronDownIcon } from "@/components/ui/icon";
 interface ConfigSelectProps {
   label: string;
   value: string;
-  options: string[];
+  options: (string | { label: string; value: string })[];
   onValueChange: (value: string) => void;
   showDivider?: boolean;
   description?: string;
@@ -72,9 +72,13 @@ export function ConfigSelect({
               <SelectPortal>
                 <SelectBackdrop />
                 <SelectContent>
-                  {options.map((option, i) => (
-                    <SelectItem key={i} value={option} label={option} />
-                  ))}
+                  {options.map((option, i) => {
+                    const optionLabel =
+                      typeof option === "string" ? option : option.label;
+                    const optionValue =
+                      typeof option === "string" ? option : option.value;
+                    return <SelectItem key={i} label={optionLabel} value={optionValue} />;
+                  })}
                 </SelectContent>
               </SelectPortal>
             </Select>

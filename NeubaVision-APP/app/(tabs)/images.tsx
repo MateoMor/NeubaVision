@@ -11,7 +11,10 @@ import { Colors } from "@/constants/theme";
 import { ImagesHeader } from "@/components/tab_images/ImagesHeader";
 import { CalculationSectionFooter } from "@/components/tab_images/CalculationSectionFooter";
 
+import { useTranslation } from "react-i18next";
+
 export default function ImagesScreen() {
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const detections = usePhotosStore((state) => state.detections);
@@ -38,7 +41,7 @@ export default function ImagesScreen() {
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.background }}>
       <ImagesHeader
-        title="Análisis"
+        title={t("images.analysis_title")}
         acceptedCount={acceptedCount}
         deleteAcceptedPhotos={deleteAcceptedPhotos}
       />

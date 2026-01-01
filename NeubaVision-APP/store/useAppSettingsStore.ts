@@ -9,6 +9,7 @@ interface AppSettingsState {
   
   // Appearance Settings
   themeMode: "light" | "dark" | "auto";
+  language: "es" | "en" | "auto";
   
   // Neubauer Chamber Settings
   chamberWidth: number;
@@ -19,6 +20,7 @@ interface AppSettingsState {
   setConfidenceThreshold: (value: number) => void;
   setIouThreshold: (value: number) => void;
   setThemeMode: (mode: "light" | "dark" | "auto") => void;
+  setLanguage: (lang: "es" | "en" | "auto") => void;
   setChamberDimensions: (width: number, height: number, depth: number) => void;
   resetToDefaults: () => void;
 }
@@ -27,6 +29,7 @@ const defaultSettings = {
   confidenceThreshold: 0.25,
   iouThreshold: 0.45,
   themeMode: "auto" as const,
+  language: "auto" as const,
   chamberWidth: 1,
   chamberHeight: 1,
   chamberDepth: 0.1,
@@ -55,6 +58,8 @@ export const useAppSettingsStore = create<AppSettingsState>()(
 
       setThemeMode: (mode: "light" | "dark" | "auto") =>
         set({ themeMode: mode }),
+
+      setLanguage: (lang: "es" | "en" | "auto") => set({ language: lang }),
 
       setChamberDimensions: (width: number, height: number, depth: number) =>
         set({

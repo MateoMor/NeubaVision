@@ -1,6 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Header } from "@/components/shared/Header";
 
 export function SettingsHeader() {
-  return <Header title="Settings" />;
+  const { t } = useTranslation();
+  return <Header title={t("tabs.settings")} />;
 }

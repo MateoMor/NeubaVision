@@ -12,6 +12,7 @@ import { useNeubauerCalculationsStore } from "@/store/useNeubauerCalculationsSto
 import { useAppSettingsStore } from "@/store/useAppSettingsStore";
 import { usePhotosStore } from "@/store/usePhotosStore";
 import { ConfigSelect } from "@/components/tab_settings/ConfigSelect";
+import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
@@ -28,12 +29,16 @@ export default function SettingsScreen() {
     chamberHeight,
     chamberDepth,
     themeMode,
+    language,
     setConfidenceThreshold,
     setIouThreshold,
     setChamberDimensions,
     setThemeMode,
+    setLanguage,
     resetToDefaults,
   } = useAppSettingsStore();
+
+  const { t } = useTranslation();
 
   // Photos Store
   const { clearAllPhotos } = usePhotosStore();
@@ -53,39 +58,35 @@ export default function SettingsScreen() {
 
   // Clear cache handler
   const handleClearCache = () => {
-    Alert.alert(
-      "Limpiar Caché",
-      "¿Estás seguro de que quieres eliminar todas las imágenes guardadas?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => {
-            clearAllPhotos();
-            Alert.alert("Éxito", "Caché limpiado correctamente");
-          },
+    Alert.alert(t("settings.clear_cache.label"), t("settings.clear_cache.description"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: () => {
+          clearAllPhotos();
+          Alert.alert(t("common.success"), t("settings.clear_cache.success"));
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // Reset settings handler
   const handleResetSettings = () => {
     Alert.alert(
-      "Restaurar Configuración",
-      "¿Estás seguro de que quieres restaurar todas las configuraciones a sus valores por defecto?",
+      t("settings.reset_defaults.label"),
+      t("settings.reset_defaults.description"),
       [
-        { text: "Cancelar", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Restaurar",
+          text: t("common.ok"),
           style: "destructive",
           onPress: () => {
             resetToDefaults();
             setWidth(chamberWidth.toString());
             setHeight(chamberHeight.toString());
             setDepth(chamberDepth.toString());
-            Alert.alert("Éxito", "Configuración restaurada");
+            Alert.alert(t("common.success"), t("settings.reset_defaults.success")); // Added success key if missing or just use generic
           },
         },
       ]
@@ -101,30 +102,33 @@ export default function SettingsScreen() {
       <SettingsHeader />
       <ScrollView className="flex-1" style={{ backgroundColor: themeColors.background }}>
         <View className="p-5">
-          <ConfigSection title="Apariencia">
+          <ConfigSection title={t("settings.appearance")}>
             <ConfigSelect
-              label="Tema"
-              value={
-                themeMode === "auto"
-                  ? "Automático"
-                  : themeMode === "dark"
-                  ? "Oscuro"
-                  : "Claro"
-              }
-              onValueChange={(value) => {
-                const mode =
-                  value === "Automático" ? "auto" : value === "Oscuro" ? "dark" : "light";
-                setThemeMode(mode);
-              }}
-              options={["Automático", "Claro", "Oscuro"]}
-              description="Selecciona el tema de la aplicación"
+              label={t("settings.language")}
+              value={language}
+              onValueChange={(val) => setLanguage(val as any)}
+              options={[
+                { label: t("languages.auto"), value: "auto" },
+                { label: t("languages.es"), value: "es" },
+                { label: t("languages.en"), value: "en" },
+              ]}
+            />
+            <ConfigSelect
+              label={t("settings.theme.label")}
+              value={themeMode}
+              onValueChange={(val) => setThemeMode(val as any)}
+              options={[
+                { label: t("settings.theme.auto"), value: "auto" },
+                { label: t("settings.theme.light"), value: "light" },
+                { label: t("settings.theme.dark"), value: "dark" },
+              ]}
               showDivider={false}
             />
           </ConfigSection>
 
-          <ConfigSection title="Párametros de medición">
+          <ConfigSection title={t("settings.measurement_params")}>
             <ConfigInput
-              label="Factor de dilución"
+              label={t("settings.dilution_factor.label")}
               value={dilutionFactor.toString()}
               onChangeText={(text) => {
                 const val = parseFloat(text);
@@ -135,7 +139,7 @@ export default function SettingsScreen() {
               placeholder="10"
             />
             <ConfigInput
-              label="Ancho de celda"
+              label={t("settings.chamber_width.label")}
               value={width}
               onChangeText={setWidth}
               onBlur={handleDimensionChange}
@@ -144,7 +148,7 @@ export default function SettingsScreen() {
               placeholder="1"
             />
             <ConfigInput
-              label="Alto de celda"
+              label={t("settings.chamber_height.label")}
               value={height}
               onChangeText={setHeight}
               onBlur={handleDimensionChange}
@@ -153,7 +157,7 @@ export default function SettingsScreen() {
               placeholder="1"
             />
             <ConfigInput
-              label="Profundidad de celda"
+              label={t("settings.chamber_depth.label")}
               value={depth}
               onChangeText={setDepth}
               onBlur={handleDimensionChange}
@@ -164,40 +168,40 @@ export default function SettingsScreen() {
             />
           </ConfigSection>
 
-          <ConfigSection title="Configuración del Modelo">
+          <ConfigSection title={t("settings.model_settings")}>
             <ConfigSlider
-              label="Sensibilidad"
+              label={t("settings.sensitivity.label")}
               value={confidenceThreshold}
               onValueChange={setConfidenceThreshold}
               minimumValue={0.1}
               maximumValue={0.9}
               step={0.05}
               valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-              description="Umbral de confianza para detecciones. Mayor = más estricto"
+              description={t("settings.sensitivity.description")}
             />
             <ConfigSlider
-              label="Supresión de duplicados (IOU)"
+              label={t("settings.iou.label")}
               value={iouThreshold}
               onValueChange={setIouThreshold}
               minimumValue={0.1}
               maximumValue={0.9}
               step={0.05}
               valueFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-              description="Umbral para eliminar detecciones duplicadas"
+              description={t("settings.iou.description")}
               showDivider={false}
             />
           </ConfigSection>
 
-          <ConfigSection title="Avanzado">
+          <ConfigSection title={t("settings.advanced")}>
             <ConfigButton
-              label="Limpiar caché de imágenes"
+              label={t("settings.clear_cache.label")}
               onPress={handleClearCache}
               icon="trash-outline"
               destructive
               showDivider={false}
             />
             <ConfigButton
-              label="Restaurar configuración por defecto"
+              label={t("settings.reset_defaults.label")}
               onPress={handleResetSettings}
               icon="refresh-outline"
               destructive

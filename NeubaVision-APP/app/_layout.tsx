@@ -10,6 +10,11 @@ import "@/global.css";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import "@/i18n"; // Initialize i18n
+import { updateLanguage } from "@/i18n";
+import { useAppSettingsStore } from "@/store/useAppSettingsStore";
+import { useEffect } from "react";
+
 export const unstable_settings = {
   anchor: "(tabs)",
 };
@@ -20,6 +25,12 @@ export default function RootLayout() {
   const isDark = colorScheme === "dark";
 
   const isCamera = segments.includes("camera");
+
+  const language = useAppSettingsStore((state) => state.language);
+
+  useEffect(() => {
+    updateLanguage(language);
+  }, [language]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs } from "expo-router";
 import React from "react";
 
@@ -7,6 +8,7 @@ import { useColorScheme } from "@/hooks/theme/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -24,7 +26,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="camera"
         options={{
-          title: "Camera",
+          title: t("tabs.camera"),
           tabBarIcon: ({ color }) => (
             <FontAwesome size={24} name="camera" color={color} />
           ),
@@ -33,14 +35,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="images"
         options={{
-          title: "Images",
+          title: t("tabs.images"),
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="image" color={color} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: t("tabs.settings"),
           tabBarIcon: ({ color }) => <FontAwesome size={24} name="cog" color={color} />,
         }}
       />
