@@ -33,12 +33,12 @@
       ready: "IA lista",
     },
     calculator: {
-      title: "Cálculo de Células",
+      title: "CÁLCULO DE CÉLULAS",
       image_dimensions: "Dimensión de la imagen mm³",
       num_images: "Número de imágenes",
       total_cells: "Total de células",
       average_per_image: "Promedio / imagen",
-      concentration: "Concentración",
+      concentration: "CONCENTRACIÓN",
       cells_per_ml: "células / mL",
     },
     images: {

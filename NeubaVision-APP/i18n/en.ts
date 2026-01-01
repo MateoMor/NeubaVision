@@ -33,12 +33,12 @@ export const en = {
       ready: "AI Ready",
     },
     calculator: {
-      title: "Cell Calculation",
+      title: "CELL CALCULATION",
       image_dimensions: "Image Dimensions mm³",
       num_images: "Number of images",
       total_cells: "Total cells",
       average_per_image: "Average / image",
-      concentration: "Concentration",
+      concentration: "CONCENTRATION",
       cells_per_ml: "cells / mL",
     },
     images: {
