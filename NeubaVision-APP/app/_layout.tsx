@@ -27,14 +27,19 @@ export default function RootLayout() {
   const isCamera = segments.includes("camera");
 
   const language = useAppSettingsStore((state) => state.language);
+  const themeMode = useAppSettingsStore((state) => state.themeMode);
 
   useEffect(() => {
     updateLanguage(language);
   }, [language]);
 
+  const resolveTheme = (themeMode: "dark" | "light" | "auto") => {
+    return themeMode === "dark" ? "dark" : themeMode === "light" ? "light" : "system"
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GluestackUIProvider mode={isDark ? "dark" : "light"}>
+      <GluestackUIProvider mode={resolveTheme(themeMode)}>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
