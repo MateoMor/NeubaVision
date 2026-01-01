@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { configureReanimatedLogger } from "react-native-reanimated";
 import { ProcessingStatus } from "@/types/ProcessingStatus";
+import { useThemeColor } from "@/hooks/theme/useThemeColor";
 
 // Desactiva el modo estricto para evitar advertencias
 configureReanimatedLogger({
@@ -52,13 +53,18 @@ const ProgressBar = ({ status }: { status: ProcessingStatus }) => {
     };
   });
 
+  const bgTrack = useThemeColor({}, "inputBackground");
+  const tint = useThemeColor({}, "tint");
+  const icon = useThemeColor({}, "icon");
+
   return (
-    <View className="h-1.5 bg-zinc-700 rounded-full w-full overflow-hidden">
+    <View
+      className="h-1.5 rounded-full w-full overflow-hidden"
+      style={{ backgroundColor: bgTrack }}
+    >
       <Animated.View
-        className={`h-full ${
-          status === "queued" ? "bg-zinc-600" : "bg-green-500"
-        } rounded-full`}
-        style={animatedStyle}
+        className="h-full rounded-full"
+        style={[animatedStyle, { backgroundColor: status === "queued" ? icon : tint }]}
       />
     </View>
   );
@@ -66,6 +72,11 @@ const ProgressBar = ({ status }: { status: ProcessingStatus }) => {
 
 export const InferenceStatusToast = () => {
   const { t } = useTranslation();
+  const textColor = useThemeColor({}, "text");
+  const overlayColor = useThemeColor({}, "overlay");
+  const borderColor = useThemeColor({}, "border");
+  const iconColor = useThemeColor({}, "icon");
+  const tintColor = useThemeColor({}, "tint");
   const photos = usePhotosStore((state) => state.photos);
 
   // Get photos that are currently being processed or in queue
@@ -81,9 +92,13 @@ export const InferenceStatusToast = () => {
     <Animated.View
       entering={FadeInUp}
       exiting={FadeOutUp}
-      className="absolute top-12 left-4 right-4 bg-zinc-900/90 border border-zinc-700 p-4 rounded-2xl shadow-xl z-50"
+      className="absolute top-12 left-4 right-4 border p-4 rounded-2xl shadow-xl z-50"
+      style={{
+        backgroundColor: overlayColor,
+        borderColor: borderColor,
+      }}
     >
-      <Text className="text-white font-bold mb-3 text-sm">
+      <Text className="font-bold mb-3 text-sm" style={{ color: textColor }}>
         {activePhotos.some((p) => p.status !== "queued")
           ? t("inference.processing", { count: activePhotos.length })
           : t("inference.queued")}
@@ -93,13 +108,14 @@ export const InferenceStatusToast = () => {
         {activePhotos.map((photo, index) => (
           <View key={photo.path + index} className="flex-col gap-1">
             <View className="flex-row justify-between mb-1">
-              <Text className="text-zinc-400 text-xs truncate max-w-[80%]">
+              <Text className="text-xs truncate max-w-[80%]" style={{ color: iconColor }}>
                 {t("inference.image_label")} {photos.length - photos.indexOf(photo)}
               </Text>
               <Text
-                className={`${
-                  photo.status === "queued" ? "text-zinc-500" : "text-green-400"
-                } text-xs font-medium`}
+                className="text-xs font-medium"
+                style={{
+                  color: photo.status === "queued" ? iconColor : tintColor,
+                }}
               >
                 {photo.status === "pending" || photo.status === "queued"
                   ? t("inference.status.waiting")
