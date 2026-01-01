@@ -48,6 +48,8 @@ export const en = {
       manual_adjustment: "Manual Adj.",
       accepted: "Accepted",
       confirm: "Confirm",
+      select_images_instruction: "Select images to calculate",
+      no_images_instruction: "Take or select photos to analyze",
     },
     tabs: {
       camera: "Camera",

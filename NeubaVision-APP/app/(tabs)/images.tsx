@@ -10,6 +10,7 @@ import { useColorScheme } from "@/hooks/theme/useColorScheme";
 import { Colors } from "@/constants/theme";
 import { ImagesHeader } from "@/components/tab_images/ImagesHeader";
 import { CalculationSectionFooter } from "@/components/tab_images/CalculationSectionFooter";
+import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 
 import { useTranslation } from "react-i18next";
 
@@ -38,6 +39,8 @@ export default function ImagesScreen() {
     setItemSize(calculatedSize);
   };
 
+  const totalImagesCount = Object.keys(detections).length;
+
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: themeColors.background }}>
       <ImagesHeader
@@ -45,6 +48,25 @@ export default function ImagesScreen() {
         acceptedCount={acceptedCount}
         deleteAcceptedPhotos={deleteAcceptedPhotos}
       />
+
+      {acceptedCount === 0 && (
+        <Animated.View
+          entering={FadeInUp}
+          exiting={FadeOutUp}
+          className="px-4 py-2 items-center"
+          style={{ backgroundColor: themeColors.card + "80" }} // Semi-transparent card color
+        >
+          <Text
+            className="text-xs font-semibold opacity-60 uppercase tracking-wider text-center"
+            style={{ color: themeColors.text }}
+          >
+            {totalImagesCount > 0
+              ? t("images.select_images_instruction")
+              : t("images.no_images_instruction")}
+          </Text>
+        </Animated.View>
+      )}
+
       <FlatList
         className="flex-1"
         onLayout={handleLayout}
@@ -71,12 +93,18 @@ export default function ImagesScreen() {
                 />
 
                 {item[1].isAccepted && (
-                  <View
-                    className="absolute top-2 right-2 bg-green-500 rounded-full p-0.5 shadow-sm"
-                    style={{ elevation: 2 }}
-                  >
-                    <Ionicons name="checkmark-circle" size={18} color="white" />
-                  </View>
+                  <>
+                    <View
+                      className="absolute inset-0 bg-green-500/10 z-10"
+                      pointerEvents="none"
+                    />
+                    <View
+                      className="absolute top-2 right-2 bg-green-500 z-20 rounded-full p-0.5 shadow-sm"
+                      style={{ elevation: 4 }}
+                    >
+                      <Ionicons name="checkmark-circle" size={18} color="white" />
+                    </View>
+                  </>
                 )}
               </View>
             )}

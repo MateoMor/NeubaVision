@@ -48,6 +48,8 @@
       manual_adjustment: "Ajuste Manual",
       accepted: "Aceptada",
       confirm: "Confirmar",
+      select_images_instruction: "Selecciona las imágenes a calcular",
+      no_images_instruction: "Toma o selecciona fotos para analizar",
     },
     tabs: {
       camera: "Cámara",
