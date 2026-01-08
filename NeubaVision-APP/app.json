@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "NeubaVision_APP",
+    "name": "NeubaVision",
     "slug": "NeubaVision_APP",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.frisded.NeubaVision-APP"
+      "bundleIdentifier": "com.frisded.NeubaVision-APP",
+      "infoPlist": {
+        "NSCameraUsageDescription": "NeubaVision needs access to your Camera."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -65,6 +68,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ef473dce-250b-4b1c-b1ea-122b7bf38fed"
+      }
     }
   }
 }
