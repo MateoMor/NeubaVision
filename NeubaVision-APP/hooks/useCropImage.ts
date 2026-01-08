@@ -1,5 +1,5 @@
-import { useCallback } from "react";
 import * as ImageManipulator from "expo-image-manipulator";
+import { useCallback } from "react";
 import { CropBounds } from "./useLineDrawing";
 
 type CropRegion = {
@@ -16,23 +16,38 @@ type UseCropImageOptions = {
 };
 
 /**
+ * Helper function to perform the actual crop operation
+ */
+const performCrop = async (
+  imagePath: string,
+  cropRegion: CropRegion
+): Promise<string> => {
+  try {
+    const uri = imagePath.startsWith("/") ? `file://${imagePath}` : imagePath;
+
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ crop: cropRegion }],
+      { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    console.log("Image cropped successfully:", result.uri);
+    return result.uri;
+  } catch (error) {
+    console.error("Failed to crop image:", error);
+    console.error("Attempted crop region:", cropRegion);
+    return imagePath;
+  }
+};
+
+/**
  * Custom hook to handle image cropping based on screen crop bounds.
- * Converts screen coordinates to image coordinates considering aspect fill scaling.
  */
 export const useCropImage = ({
   cropBounds,
   screenWidth,
   screenHeight,
 }: UseCropImageOptions) => {
-  /**
-   * Crops an image based on the current crop bounds.
-   * Handles aspect fill (cover) scaling where the image may extend beyond screen bounds.
-   *
-   * @param imagePath - Path to the original image
-   * @param imageWidth - Width of the original image in pixels
-   * @param imageHeight - Height of the original image in pixels
-   * @returns Promise with the cropped image URI, or original path if no bounds
-   */
   const cropImage = useCallback(
     async (
       imagePath: string,
@@ -44,67 +59,75 @@ export const useCropImage = ({
         return imagePath;
       }
 
-      // Calculate aspect ratios
-      const screenAspect = screenWidth / screenHeight;
-      const imageAspect = imageWidth / imageHeight;
+      console.log("=== CROP DEBUG ===");
+      console.log("Screen dimensions:", { screenWidth, screenHeight });
+      console.log("Image dimensions:", { imageWidth, imageHeight });
+      console.log("Crop bounds (screen coords):", cropBounds);
+
+      const isScreenPortrait = screenHeight > screenWidth;
+      const isImageLandscape = imageWidth > imageHeight;
+      const needsRotationHandling = isScreenPortrait && isImageLandscape;
+
+      console.log("Orientation:", { isScreenPortrait, isImageLandscape, needsRotationHandling });
+
+      // NOTE: expo-image-manipulator respects EXIF orientation, so even though
+      // the camera reports 1600x1200 (landscape), the manipulator sees it as 
+      // 1200x1600 (portrait) after applying EXIF rotation.
+      // We should use the EXIF-corrected dimensions for our calculations.
+      
+      // Swap dimensions if the image needs rotation (EXIF will be applied by manipulator)
+      const actualImageWidth = needsRotationHandling ? imageHeight : imageWidth;
+      const actualImageHeight = needsRotationHandling ? imageWidth : imageHeight;
+      
+      console.log("Actual image dims (after EXIF):", { actualImageWidth, actualImageHeight });
 
       let scale: number;
       let offsetX = 0;
       let offsetY = 0;
+      let cropRegion: CropRegion;
 
-      // Aspect fill (cover) calculation
-      // The image is scaled to fill the screen, maintaining aspect ratio
-      // Some part of the image may be cropped off-screen
+      // Calculate aspect fill scaling (how the image fills the screen)
+      const imageAspect = actualImageWidth / actualImageHeight;
+      const screenAspect = screenWidth / screenHeight;
+
+      console.log("Aspect ratios:", { imageAspect, screenAspect });
+
       if (imageAspect > screenAspect) {
-        // Image is wider than screen (relative to height)
-        // Height fills the screen, width extends beyond
-        scale = imageHeight / screenHeight;
-        const scaledImageWidth = imageWidth / scale;
-        offsetX = (scaledImageWidth - screenWidth) / 2;
+        // Image is wider - height fills, width is cropped
+        scale = actualImageHeight / screenHeight;
+        const scaledWidth = actualImageWidth / scale;
+        offsetX = (scaledWidth - screenWidth) / 2;
+        console.log("Width cropped mode:", { scale, scaledWidth, offsetX });
       } else {
-        // Image is taller than screen (relative to width)
-        // Width fills the screen, height extends beyond
-        scale = imageWidth / screenWidth;
-        const scaledImageHeight = imageHeight / scale;
-        offsetY = (scaledImageHeight - screenHeight) / 2;
+        // Image is taller - width fills, height is cropped
+        scale = actualImageWidth / screenWidth;
+        const scaledHeight = actualImageHeight / scale;
+        offsetY = (scaledHeight - screenHeight) / 2;
+        console.log("Height cropped mode:", { scale, scaledHeight, offsetY });
       }
 
-      // Convert screen coordinates to image coordinates
-      // Account for the offset caused by aspect fill centering
-      const cropRegion: CropRegion = {
+      // Convert screen coordinates directly to image coordinates (no rotation needed)
+      cropRegion = {
         originX: Math.round((cropBounds.x + offsetX) * scale),
         originY: Math.round((cropBounds.y + offsetY) * scale),
         width: Math.round(cropBounds.width * scale),
         height: Math.round(cropBounds.height * scale),
       };
 
-      // Clamp values to ensure they're within image bounds
+      console.log("Crop region (before clamp):", cropRegion);
+
+      // Clamp using the actual (EXIF-corrected) dimensions
       const clampedRegion: CropRegion = {
-        originX: Math.max(0, Math.min(cropRegion.originX, imageWidth - 1)),
-        originY: Math.max(0, Math.min(cropRegion.originY, imageHeight - 1)),
-        width: Math.max(1, Math.min(cropRegion.width, imageWidth - Math.max(0, cropRegion.originX))),
-        height: Math.max(1, Math.min(cropRegion.height, imageHeight - Math.max(0, cropRegion.originY))),
+        originX: Math.max(0, Math.min(cropRegion.originX, actualImageWidth - 1)),
+        originY: Math.max(0, Math.min(cropRegion.originY, actualImageHeight - 1)),
+        width: Math.max(1, Math.min(cropRegion.width, actualImageWidth - Math.max(0, cropRegion.originX))),
+        height: Math.max(1, Math.min(cropRegion.height, actualImageHeight - Math.max(0, cropRegion.originY))),
       };
 
-      try {
-        // Normalize image path for expo-image-manipulator
-        const uri = imagePath.startsWith("/")
-          ? `file://${imagePath}`
-          : imagePath;
+      console.log("Crop region (after clamp):", clampedRegion);
+      console.log("=== END CROP DEBUG ===");
 
-        const result = await ImageManipulator.manipulateAsync(
-          uri,
-          [{ crop: clampedRegion }],
-          { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
-        );
-
-        console.log("Image cropped successfully:", result.uri);
-        return result.uri;
-      } catch (error) {
-        console.error("Failed to crop image:", error);
-        console.error("Attempted crop region:", clampedRegion);
-        return imagePath; // Return original on error
-      }
+      return await performCrop(imagePath, clampedRegion);
     },
     [cropBounds, screenWidth, screenHeight]
   );

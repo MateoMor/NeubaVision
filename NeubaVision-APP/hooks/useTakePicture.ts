@@ -1,4 +1,4 @@
-import { useCallback, RefObject } from "react";
+import { RefObject, useCallback } from "react";
 import { Camera, PhotoFile } from "react-native-vision-camera";
 
 type UseTakePictureOptions = {
@@ -30,6 +30,7 @@ export const useTakePicture = ({
     try {
       const photo = await cameraRef.current.takePhoto();
       console.log("Photo taken:", photo.path);
+      console.log("Photo dimensions from camera:", { width: photo.width, height: photo.height, orientation: photo.orientation });
 
       // If cropImage is provided, crop the photo
       if (cropImage) {
